@@ -248,3 +248,31 @@ CREATE POLICY "Admins have full access to site settings" ON public.site_settings
 
 CREATE POLICY "Admins have full access to navigation items" ON public.navigation_items
     FOR ALL USING (auth.role() = 'authenticated');
+
+-- ====================================================================
+-- 3) Storage Buckets & Policies for Permanent Media Assets
+-- ====================================================================
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('article-images', 'article-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('banners', 'banners', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Storage RLS Policies
+CREATE POLICY "Public Read Access for Article Images" 
+ON storage.objects FOR SELECT 
+USING (bucket_id IN ('article-images', 'banners'));
+
+CREATE POLICY "Admin Insert Access for Article Images" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id IN ('article-images', 'banners'));
+
+CREATE POLICY "Admin Update Access for Article Images" 
+ON storage.objects FOR UPDATE 
+USING (bucket_id IN ('article-images', 'banners'));
+
+CREATE POLICY "Admin Delete Access for Article Images" 
+ON storage.objects FOR DELETE 
+USING (bucket_id IN ('article-images', 'banners'));

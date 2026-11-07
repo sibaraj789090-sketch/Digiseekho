@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { adService } from '../lib/adService';
 import { AdPlacement, AdSystemSettings } from '../types';
 import { ExternalLink } from 'lucide-react';
+import { normalizeImageUrl, handleImageError } from '../lib/imageUtils';
 
 interface AdBannerProps {
   placementId?: string;
@@ -158,9 +159,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({
               aria-label={placement.alt_text || placement.name}
             >
               <img
-                src={imageUrl}
+                src={normalizeImageUrl(imageUrl)}
                 alt={placement.alt_text || 'DigiSeekho Sponsored Promotion'}
                 loading="lazy"
+                onError={handleImageError}
                 className="w-full h-auto max-h-[280px] object-cover sm:object-contain mx-auto rounded-lg sm:rounded-xl transition-transform duration-300 group-hover:scale-[1.008]"
               />
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { dataService } from '../../lib/dataService';
 import { MediaItem } from '../../types';
 import { useApp } from '../../context/AppContext';
+import { normalizeImageUrl, handleImageError } from '../../lib/imageUtils';
 import { 
   Upload, 
   Trash2, 
@@ -45,7 +46,7 @@ export const AdminMedia: React.FC = () => {
 
     const newItem = dataService.addMedia({
       title: uploadTitle || 'Uploaded Image',
-      file_url: uploadUrl,
+      file_url: normalizeImageUrl(uploadUrl.trim()),
       file_name: uploadTitle.toLowerCase().replace(/\s+/g, '_') + '.jpg',
       file_size: 250000,
       mime_type: 'image/jpeg',
@@ -126,7 +127,7 @@ export const AdminMedia: React.FC = () => {
                 type="text"
                 value={uploadUrl}
                 onChange={e => setUploadUrl(e.target.value)}
-                placeholder="/src/assets/images/... or https://..."
+                placeholder="/assets/images/... or https://..."
                 className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -191,8 +192,9 @@ export const AdminMedia: React.FC = () => {
               className="aspect-16/10 bg-slate-100 dark:bg-slate-800 cursor-pointer overflow-hidden relative"
             >
               <img
-                src={item.file_url}
+                src={normalizeImageUrl(item.file_url)}
                 alt={item.alt_text || item.title}
+                onError={handleImageError}
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
@@ -248,8 +250,13 @@ export const AdminMedia: React.FC = () => {
               </button>
             </div>
 
-            <div className="aspect-16/10 rounded-lg overflow-hidden bg-slate-100 mb-4">
-              <img src={previewItem.file_url} alt={previewItem.alt_text} className="w-full h-full object-cover" />
+            <div className="aspect-16/10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 mb-4">
+              <img
+                src={normalizeImageUrl(previewItem.file_url)}
+                alt={previewItem.alt_text}
+                onError={handleImageError}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">

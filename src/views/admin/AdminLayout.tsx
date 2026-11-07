@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { DEFAULT_AUTHOR_AVATAR } from '../../lib/imageUtils';
 import {
   LayoutDashboard,
   FileText,
@@ -132,8 +133,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img
-                src={adminUser.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80'}
+                src={adminUser.avatar_url || DEFAULT_AUTHOR_AVATAR}
                 alt={adminUser.full_name}
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_AUTHOR_AVATAR;
+                }}
                 className="w-8 h-8 rounded-full object-cover"
               />
               <div className="text-left">

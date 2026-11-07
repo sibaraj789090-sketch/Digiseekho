@@ -19,6 +19,7 @@ import {
 import { ArticleCard } from '../components/ArticleCard';
 import { FloatingSocialShare } from '../components/FloatingSocialShare';
 import { AdBanner } from '../components/AdBanner';
+import { normalizeImageUrl, handleImageError, DEFAULT_AUTHOR_AVATAR } from '../lib/imageUtils';
 
 interface ArticleViewProps {
   slug: string;
@@ -66,7 +67,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
       canonicalUrl,
       hreflangEn,
       hreflangHi,
-      ogImage: post.featured_image,
+      ogImage: normalizeImageUrl(post.featured_image),
       focusKeyword: translation.focus_keyword,
       author: post.author?.full_name || 'DigiSeekho Editorial Team',
       publishedTime: post.published_at,
@@ -291,8 +292,11 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
           <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-3">
               <img
-                src={post.author?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
+                src={normalizeImageUrl(post.author?.avatar_url, DEFAULT_AUTHOR_AVATAR)}
                 alt={post.author?.full_name || 'Author'}
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_AUTHOR_AVATAR;
+                }}
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div>
@@ -326,9 +330,10 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-12">
         <div className="aspect-16/9 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-md">
           <img
-            src={post.featured_image}
+            src={normalizeImageUrl(post.featured_image)}
             alt={post.image_alt || translation.title}
             referrerPolicy="no-referrer"
+            onError={handleImageError}
             className="w-full h-full object-cover"
           />
         </div>
@@ -633,8 +638,11 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
               </div>
               <div className="flex items-center gap-3 mb-3">
                 <img
-                  src={post.author?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
+                  src={normalizeImageUrl(post.author?.avatar_url, DEFAULT_AUTHOR_AVATAR)}
                   alt={post.author?.full_name || 'Author'}
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_AUTHOR_AVATAR;
+                  }}
                   className="w-12 h-12 rounded-full object-cover"
                 />
                 <div>

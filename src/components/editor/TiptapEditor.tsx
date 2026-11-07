@@ -16,6 +16,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import { uploadArticleImage } from '../../lib/supabaseStorage';
 import { dataService } from '../../lib/dataService';
 import { useApp } from '../../context/AppContext';
+import { normalizeImageUrl } from '../../lib/imageUtils';
 import {
   Bold,
   Italic,
@@ -319,6 +320,8 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   const handleInsertDirectImage = () => {
     if (!directImageUrl.trim()) return;
 
+    const normalizedUrl = normalizeImageUrl(directImageUrl.trim());
+
     const alignClass = imageAlign === 'left'
       ? 'float-left mr-6 mb-4'
       : imageAlign === 'right'
@@ -331,7 +334,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
 
     const figureHtml = `
 <figure class="article-image-figure my-6 ${alignClass}" style="width: ${imageWidth}; max-width: 100%;">
-  <img src="${directImageUrl.trim()}" alt="${imageAlt || 'Article image'}" style="width: 100%; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); object-fit: cover;" />
+  <img src="${normalizedUrl}" alt="${imageAlt || 'Article image'}" loading="lazy" onerror="this.onerror=null;this.src='/assets/images/article_fallback.svg';" style="width: 100%; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); object-fit: cover;" />
   ${captionHtml}
 </figure>
 <p></p>
@@ -467,7 +470,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
 <div class="image-gallery my-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
   ${media.map(m => `
     <div style="border-radius: 0.75rem; overflow: hidden; border: 1px solid rgba(148,163,184,0.3); background-color: #f8fafc;">
-      <img src="${m.file_url}" alt="${m.title}" style="width: 100%; height: 180px; object-fit: cover;" />
+      <img src="${normalizeImageUrl(m.file_url)}" alt="${m.title}" loading="lazy" onerror="this.onerror=null;this.src='/assets/images/article_fallback.svg';" style="width: 100%; height: 180px; object-fit: cover;" />
       <div style="padding: 0.5rem; font-size: 0.75rem; color: #64748b; text-align: center;">${m.title}</div>
     </div>
   `).join('')}
@@ -1076,7 +1079,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
                   type="text"
                   value={directImageUrl}
                   onChange={e => setDirectImageUrl(e.target.value)}
-                  placeholder="https://example.com/photo.jpg or /src/assets/images/..."
+                  placeholder="https://example.com/photo.jpg or /assets/images/..."
                   className="w-full px-3 py-2 text-xs font-mono bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>

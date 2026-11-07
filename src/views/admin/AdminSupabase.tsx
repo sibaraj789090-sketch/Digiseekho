@@ -151,6 +151,10 @@ CREATE TABLE IF NOT EXISTS public.post_translations (
     UNIQUE(post_id, language)
 );
 
+-- Public Storage Buckets for Media & Banners
+INSERT INTO storage.buckets (id, name, public) VALUES ('article-images', 'article-images', true) ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name, public) VALUES ('banners', 'banners', true) ON CONFLICT (id) DO UPDATE SET public = true;
+
 -- Full migration file is in /supabase/migrations/20250101_initial_schema.sql`;
 
   const handleCopySQL = () => {

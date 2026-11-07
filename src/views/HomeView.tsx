@@ -5,6 +5,7 @@ import { ArticleCard } from '../components/ArticleCard';
 import { SocialFollowSection } from '../components/SocialFollowSection';
 import { CategoryNavSection } from '../components/CategoryNavSection';
 import { AdBanner } from '../components/AdBanner';
+import { normalizeImageUrl } from '../lib/imageUtils';
 import { TrendingUp, ArrowRight, Mail, CheckCircle2 } from 'lucide-react';
 
 interface HomeViewProps {
@@ -76,11 +77,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 >
                   <picture className="block w-full">
                     {banner.mobile_image_url && (
-                      <source media="(max-width: 640px)" srcSet={banner.mobile_image_url} />
+                      <source media="(max-width: 640px)" srcSet={normalizeImageUrl(banner.mobile_image_url)} />
                     )}
                     <img
-                      src={banner.desktop_image_url}
+                      src={normalizeImageUrl(banner.desktop_image_url, '/assets/images/digiseekho_official_banner.png')}
                       alt={banner.alt_text || 'DigiSeekho – Learn Technology. Discover AI. Grow Digitally.'}
+                      onError={(e) => {
+                        e.currentTarget.src = '/assets/images/digiseekho_official_banner.png';
+                      }}
                       className="w-full h-auto object-contain block select-none transform transition-transform duration-500 group-hover:scale-[1.003]"
                       loading="eager"
                       fetchPriority="high"
@@ -90,11 +94,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               ) : (
                 <picture className="block w-full">
                   {banner.mobile_image_url && (
-                    <source media="(max-width: 640px)" srcSet={banner.mobile_image_url} />
+                    <source media="(max-width: 640px)" srcSet={normalizeImageUrl(banner.mobile_image_url)} />
                   )}
                   <img
-                    src={banner.desktop_image_url}
+                    src={normalizeImageUrl(banner.desktop_image_url, '/assets/images/digiseekho_official_banner.png')}
                     alt={banner.alt_text || 'DigiSeekho – Learn Technology. Discover AI. Grow Digitally.'}
+                    onError={(e) => {
+                      e.currentTarget.src = '/assets/images/digiseekho_official_banner.png';
+                    }}
                     className="w-full h-auto object-contain block select-none"
                     loading="eager"
                     fetchPriority="high"

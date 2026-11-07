@@ -10,6 +10,7 @@ import {
   uploadBannerImage,
   syncExistingBannerToSupabase
 } from '../../lib/supabaseStorage';
+import { normalizeImageUrl } from '../../lib/imageUtils';
 import {
   Image as ImageIcon,
   Upload,
@@ -335,8 +336,11 @@ export const AdminBannerManager: React.FC<AdminBannerManagerProps> = ({ onNaviga
             </div>
             <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 max-h-48 flex items-center justify-center">
               <img
-                src={currentBanner.desktop_image_url}
+                src={normalizeImageUrl(currentBanner.desktop_image_url, '/assets/images/digiseekho_official_banner.png')}
                 alt={currentBanner.alt_text}
+                onError={(e) => {
+                  e.currentTarget.src = '/assets/images/digiseekho_official_banner.png';
+                }}
                 className="w-full h-auto max-h-48 object-contain"
               />
             </div>
@@ -628,8 +632,11 @@ export const AdminBannerManager: React.FC<AdminBannerManagerProps> = ({ onNaviga
                 <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-950">
                   {desktopImageUrl ? (
                     <img
-                      src={desktopImageUrl}
+                      src={normalizeImageUrl(desktopImageUrl, '/assets/images/digiseekho_official_banner.png')}
                       alt={altText}
+                      onError={(e) => {
+                        e.currentTarget.src = '/assets/images/digiseekho_official_banner.png';
+                      }}
                       className="w-full h-auto object-contain block select-none"
                     />
                   ) : (
@@ -647,8 +654,11 @@ export const AdminBannerManager: React.FC<AdminBannerManagerProps> = ({ onNaviga
                 </div>
                 <div className="w-full rounded-2xl overflow-hidden shadow-xl border-4 border-slate-800 bg-slate-950">
                   <img
-                    src={mobileImageUrl || desktopImageUrl}
+                    src={normalizeImageUrl(mobileImageUrl || desktopImageUrl, '/assets/images/digiseekho_official_banner.png')}
                     alt={altText}
+                    onError={(e) => {
+                      e.currentTarget.src = '/assets/images/digiseekho_official_banner.png';
+                    }}
                     className="w-full h-auto object-contain block select-none"
                   />
                 </div>

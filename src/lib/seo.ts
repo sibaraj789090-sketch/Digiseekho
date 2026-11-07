@@ -1,6 +1,7 @@
 import { SEOData, Post, Category, Language } from '../types';
+import { toAbsoluteImageUrl, normalizeImageUrl } from './imageUtils';
 
-export const BASE_SITE_URL = 'https://digiseekho.com';
+export const BASE_SITE_URL = (import.meta as any).env?.VITE_SITE_URL || 'https://digiseekho.com';
 
 export function updatePageSEO(seo: SEOData) {
   // Update document title
@@ -53,7 +54,8 @@ export function updatePageSEO(seo: SEOData) {
   setMeta('property', 'og:type', seo.type || 'website');
   setMeta('property', 'og:site_name', 'DigiSeekho');
   if (seo.ogImage) {
-    setMeta('property', 'og:image', seo.ogImage);
+    const absoluteOgImage = toAbsoluteImageUrl(seo.ogImage);
+    setMeta('property', 'og:image', absoluteOgImage);
   }
 
   // Twitter Card
@@ -61,7 +63,8 @@ export function updatePageSEO(seo: SEOData) {
   setMeta('name', 'twitter:title', seo.title);
   setMeta('name', 'twitter:description', seo.description);
   if (seo.ogImage) {
-    setMeta('name', 'twitter:image', seo.ogImage);
+    const absoluteOgImage = toAbsoluteImageUrl(seo.ogImage);
+    setMeta('name', 'twitter:image', absoluteOgImage);
   }
 
   // JSON-LD Structured Data
@@ -110,7 +113,7 @@ export function updatePageSEO(seo: SEOData) {
       },
       headline: seo.title,
       description: seo.description,
-      image: seo.ogImage ? [seo.ogImage] : [],
+      image: seo.ogImage ? [toAbsoluteImageUrl(seo.ogImage)] : [],
       datePublished: seo.publishedTime || new Date().toISOString(),
       dateModified: seo.modifiedTime || seo.publishedTime || new Date().toISOString(),
       author: {

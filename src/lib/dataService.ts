@@ -16,6 +16,7 @@ import {
 import { supabase, isSupabaseConfigured, getSupabaseClient } from './supabase';
 import { INITIAL_AD_SETTINGS, adService } from './adService';
 import { authService, AUTHORIZED_ADMIN_EMAIL } from './authService';
+import { normalizeImageUrl, DEFAULT_ARTICLE_IMAGE } from './imageUtils';
 
 const STORAGE_KEYS = {
   POSTS: 'digiseekho_posts_v1',
@@ -194,7 +195,7 @@ export const INITIAL_TAGS: Tag[] = [
 export const INITIAL_POSTS: Post[] = [
   {
     id: 'post-001',
-    featured_image: '/src/assets/images/ai_tools_guide_1794037938005.jpg',
+    featured_image: '/assets/images/ai_tools_guide_1794037938005.jpg',
     image_alt: 'Laptop displaying AI assistant visualization on modern limestone desk',
     category_id: 'cat-3',
     author_id: DEFAULT_ADMIN.id,
@@ -271,7 +272,7 @@ export const INITIAL_POSTS: Post[] = [
   },
   {
     id: 'post-002',
-    featured_image: '/src/assets/images/seo_growth_desk_1794037938420.jpg',
+    featured_image: '/assets/images/seo_growth_desk_1794037938420.jpg',
     image_alt: 'Top-down photo of digital marketer laptop showing organic search ranking analytics',
     category_id: 'cat-4',
     author_id: DEFAULT_ADMIN.id,
@@ -339,7 +340,7 @@ export const INITIAL_POSTS: Post[] = [
   },
   {
     id: 'post-003',
-    featured_image: '/src/assets/images/cyber_safety_tech_1794037938549.jpg',
+    featured_image: '/assets/images/cyber_safety_tech_1794037938549.jpg',
     image_alt: 'Smartphone and hardware security token on dark slate texture representing cyber safety',
     category_id: 'cat-8',
     author_id: DEFAULT_ADMIN.id,
@@ -404,7 +405,7 @@ export const INITIAL_POSTS: Post[] = [
   },
   {
     id: 'post-004',
-    featured_image: '/src/assets/images/hero_tech_editorial_1794037937726.jpg',
+    featured_image: '/assets/images/hero_tech_editorial_1794037937726.jpg',
     image_alt: 'Laptop on clean desk with neural network model code on screen',
     category_id: 'cat-5',
     author_id: DEFAULT_ADMIN.id,
@@ -464,7 +465,7 @@ export const INITIAL_MEDIA: MediaItem[] = [
   {
     id: 'med-1',
     title: 'Modern Tech Workspace Laptop',
-    file_url: '/src/assets/images/hero_tech_editorial_1794037937726.jpg',
+    file_url: '/assets/images/hero_tech_editorial_1794037937726.jpg',
     file_name: 'hero_tech_editorial.jpg',
     file_size: 420000,
     mime_type: 'image/jpeg',
@@ -474,7 +475,7 @@ export const INITIAL_MEDIA: MediaItem[] = [
   {
     id: 'med-2',
     title: 'AI Assistant Visualization',
-    file_url: '/src/assets/images/ai_tools_guide_1794037938005.jpg',
+    file_url: '/assets/images/ai_tools_guide_1794037938005.jpg',
     file_name: 'ai_tools_guide.jpg',
     file_size: 380000,
     mime_type: 'image/jpeg',
@@ -484,7 +485,7 @@ export const INITIAL_MEDIA: MediaItem[] = [
   {
     id: 'med-3',
     title: 'SEO Ranking Workspace',
-    file_url: '/src/assets/images/seo_growth_desk_1794037938420.jpg',
+    file_url: '/assets/images/seo_growth_desk_1794037938420.jpg',
     file_name: 'seo_growth_desk.jpg',
     file_size: 450000,
     mime_type: 'image/jpeg',
@@ -494,11 +495,21 @@ export const INITIAL_MEDIA: MediaItem[] = [
   {
     id: 'med-4',
     title: 'Cyber Security & Passkey Concept',
-    file_url: '/src/assets/images/cyber_safety_tech_1794037938549.jpg',
+    file_url: '/assets/images/cyber_safety_tech_1794037938549.jpg',
     file_name: 'cyber_safety_tech.jpg',
     file_size: 360000,
     mime_type: 'image/jpeg',
     alt_text: 'Smartphone and hardware security key on dark slate surface',
+    created_at: '2026-03-22T08:00:00Z'
+  },
+  {
+    id: 'med-fallback',
+    title: 'DigiSeekho Editorial Branded Fallback',
+    file_url: '/assets/images/article_fallback.svg',
+    file_name: 'article_fallback.svg',
+    file_size: 3500,
+    mime_type: 'image/svg+xml',
+    alt_text: 'DigiSeekho Editorial Technology & AI Vector Fallback',
     created_at: '2026-03-22T08:00:00Z'
   }
 ];
@@ -643,9 +654,37 @@ class DataService {
 
   constructor() {
     this.posts = loadStored(STORAGE_KEYS.POSTS, INITIAL_POSTS);
+    // Sanitize and migrate any legacy or preview relative /src/ paths to production public /assets/
+    let postsNeedSave = false;
+    this.posts = this.posts.map(post => {
+      const normalized = normalizeImageUrl(post.featured_image, DEFAULT_ARTICLE_IMAGE);
+      if (normalized !== post.featured_image) {
+        postsNeedSave = true;
+        return { ...post, featured_image: normalized };
+      }
+      return post;
+    });
+    if (postsNeedSave) {
+      saveStored(STORAGE_KEYS.POSTS, this.posts);
+    }
+
     this.categories = loadStored(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
     this.tags = loadStored(STORAGE_KEYS.TAGS, INITIAL_TAGS);
+
     this.media = loadStored(STORAGE_KEYS.MEDIA, INITIAL_MEDIA);
+    let mediaNeedSave = false;
+    this.media = this.media.map(item => {
+      const normalized = normalizeImageUrl(item.file_url, DEFAULT_ARTICLE_IMAGE);
+      if (normalized !== item.file_url) {
+        mediaNeedSave = true;
+        return { ...item, file_url: normalized };
+      }
+      return item;
+    });
+    if (mediaNeedSave) {
+      saveStored(STORAGE_KEYS.MEDIA, this.media);
+    }
+
     this.comments = loadStored(STORAGE_KEYS.COMMENTS, INITIAL_COMMENTS);
     this.subscribers = loadStored(STORAGE_KEYS.SUBSCRIBERS, [
       { id: 'sub-1', email: 'anand.tech@gmail.com', language: 'en', is_active: true, subscribed_at: '2026-03-15T09:00:00Z' },
@@ -655,6 +694,12 @@ class DataService {
     if (!this.settings.homepage_banner) {
       this.settings.homepage_banner = INITIAL_SETTINGS.homepage_banner;
       saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+    } else {
+      const normBanner = normalizeImageUrl(this.settings.homepage_banner.desktop_image_url);
+      if (normBanner !== this.settings.homepage_banner.desktop_image_url) {
+        this.settings.homepage_banner.desktop_image_url = normBanner;
+        saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+      }
     }
     if (!this.settings.social_media) {
       this.settings.social_media = INITIAL_SOCIAL_MEDIA;
@@ -721,18 +766,25 @@ class DataService {
     const now = new Date().toISOString();
     let post: Post;
 
+    const normalizedFeaturedImage = normalizeImageUrl(
+      postData.featured_image || DEFAULT_ARTICLE_IMAGE,
+      DEFAULT_ARTICLE_IMAGE
+    );
+
     if (postData.id) {
       const index = this.posts.findIndex(p => p.id === postData.id);
       if (index !== -1) {
         post = {
           ...this.posts[index],
           ...postData,
+          featured_image: postData.featured_image ? normalizedFeaturedImage : this.posts[index].featured_image,
           updated_at: now
         } as Post;
         this.posts[index] = post;
       } else {
         post = {
           ...postData,
+          featured_image: normalizedFeaturedImage,
           id: postData.id,
           created_at: now,
           updated_at: now
@@ -742,7 +794,7 @@ class DataService {
     } else {
       post = {
         id: `post-${Date.now()}`,
-        featured_image: postData.featured_image || '/src/assets/images/hero_tech_editorial_1794037937726.jpg',
+        featured_image: normalizedFeaturedImage,
         image_alt: postData.image_alt || '',
         category_id: postData.category_id || this.categories[0].id,
         author_id: this.adminUser.id,
@@ -871,6 +923,7 @@ class DataService {
   addMedia(item: Omit<MediaItem, 'id' | 'created_at'>): MediaItem {
     const newItem: MediaItem = {
       ...item,
+      file_url: normalizeImageUrl(item.file_url, DEFAULT_ARTICLE_IMAGE),
       id: `med-${Date.now()}`,
       created_at: new Date().toISOString()
     };

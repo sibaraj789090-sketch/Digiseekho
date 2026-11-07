@@ -1,6 +1,7 @@
 import React from 'react';
 import { Post, Language } from '../types';
 import { Clock, Calendar } from 'lucide-react';
+import { normalizeImageUrl, handleImageError, DEFAULT_AUTHOR_AVATAR } from '../lib/imageUtils';
 
 interface ArticleCardProps {
   post: Post;
@@ -41,10 +42,11 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
           className="lg:col-span-7 aspect-16/10 rounded-xl overflow-hidden cursor-pointer relative bg-slate-100 dark:bg-slate-800"
         >
           <img
-            src={post.featured_image}
+            src={normalizeImageUrl(post.featured_image)}
             alt={post.image_alt || translation.title}
             referrerPolicy="no-referrer"
             loading="lazy"
+            onError={handleImageError}
             className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
           />
         </div>
@@ -87,8 +89,11 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-2.5">
               <img
-                src={post.author?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80'}
+                src={normalizeImageUrl(post.author?.avatar_url, DEFAULT_AUTHOR_AVATAR)}
                 alt={post.author?.full_name || 'Author'}
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_AUTHOR_AVATAR;
+                }}
                 className="w-7 h-7 rounded-full object-cover"
               />
               <span className="font-medium text-slate-800 dark:text-slate-200">
@@ -115,10 +120,11 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
         className="aspect-16/10 overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-800 relative"
       >
         <img
-          src={post.featured_image}
+          src={normalizeImageUrl(post.featured_image)}
           alt={post.image_alt || translation.title}
           referrerPolicy="no-referrer"
           loading="lazy"
+          onError={handleImageError}
           className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
         />
       </div>

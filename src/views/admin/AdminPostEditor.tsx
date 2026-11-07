@@ -4,6 +4,7 @@ import { Post, Language } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { analyzeSEO } from '../../lib/seo';
 import { TiptapEditor } from '../../components/editor/TiptapEditor';
+import { normalizeImageUrl, handleImageError, DEFAULT_ARTICLE_IMAGE } from '../../lib/imageUtils';
 import { 
   Save, 
   Eye, 
@@ -41,7 +42,11 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
 
   // Form State
   const [categoryId, setCategoryId] = useState(existingPost?.category_id || categories[0]?.id || '');
-  const [featuredImage, setFeaturedImage] = useState(existingPost?.featured_image || mediaList[0]?.file_url || '');
+  const [featuredImage, setFeaturedImage] = useState(
+    existingPost?.featured_image
+      ? normalizeImageUrl(existingPost.featured_image)
+      : (mediaList[0]?.file_url ? normalizeImageUrl(mediaList[0].file_url) : DEFAULT_ARTICLE_IMAGE)
+  );
   const [imageAlt, setImageAlt] = useState(existingPost?.image_alt || '');
   const [status, setStatus] = useState<Post['status']>(existingPost?.status || 'published');
   const [readingTime, setReadingTime] = useState(existingPost?.reading_time_minutes || 5);
@@ -131,7 +136,7 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
     const saved = dataService.savePost({
       id: postId,
       category_id: categoryId,
-      featured_image: featuredImage,
+      featured_image: normalizeImageUrl(featuredImage || DEFAULT_ARTICLE_IMAGE),
       image_alt: imageAlt,
       status: postStatus,
       reading_time_minutes: Number(readingTime) || 5,
@@ -541,10 +546,11 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
             </div>
 
             {featuredImage ? (
-              <div className="aspect-16/10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100">
+              <div className="aspect-16/10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={featuredImage}
+                  src={normalizeImageUrl(featuredImage)}
                   alt={imageAlt || 'Featured thumbnail'}
+                  onError={handleImageError}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -562,7 +568,7 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
                 type="text"
                 value={featuredImage}
                 onChange={e => setFeaturedImage(e.target.value)}
-                placeholder="/src/assets/images/..."
+                placeholder="/assets/images/... or https://..."
                 className="w-full px-3 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -657,7 +663,8 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
                 <div
                   key={item.id}
                   onClick={() => {
-                    setFeaturedImage(item.file_url);
+                    const norm = normalizeImageUrl(item.file_url);
+                    setFeaturedImage(norm);
                     setImageAlt(item.alt_text || item.title);
                     setMediaPickerOpen(false);
                     showToast('Featured image updated', 'info');
@@ -665,8 +672,9 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
                   className="aspect-16/10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 group relative"
                 >
                   <img
-                    src={item.file_url}
+                    src={normalizeImageUrl(item.file_url)}
                     alt={item.title}
+                    onError={handleImageError}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   />
                   <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
@@ -704,8 +712,13 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
             </p>
 
             {featuredImage && (
-              <div className="aspect-16/9 rounded-xl overflow-hidden mb-6 bg-slate-100">
-                <img src={featuredImage} alt="Preview" className="w-full h-full object-cover" />
+              <div className="aspect-16/9 rounded-xl overflow-hidden mb-6 bg-slate-100 dark:bg-slate-800">
+                <img
+                  src={normalizeImageUrl(featuredImage)}
+                  alt="Preview"
+                  onError={handleImageError}
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
 
