@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language, UserProfile } from '../types';
 import { DEFAULT_ADMIN } from '../lib/dataService';
+import { authService, AUTHORIZED_ADMIN_EMAIL } from '../lib/authService';
+import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
 
 interface Toast {
   id: string;
@@ -15,7 +17,7 @@ interface AppContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   isAdminAuthenticated: boolean;
-  loginAdmin: (passcode?: string) => boolean;
+  loginAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string; isInitialSetup?: boolean }>;
   logoutAdmin: () => void;
   adminUser: UserProfile;
   searchOpen: boolean;
@@ -48,10 +50,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 'light';
   });
 
-  // Admin auth state
+  // Admin auth state strictly verified against authService
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('digiseekho_admin_session') === 'active';
+      return authService.isSessionValid();
     }
     return false;
   });
@@ -68,6 +70,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     localStorage.setItem('digiseekho_theme', theme);
   }, [theme]);
+
+  // Supabase Auth listener to catch Google logins or remote signouts
+  useEffect(() => {
+    // Check local session validity on mount
+    const isValid = authService.isSessionValid();
+    if (!isValid && isAdminAuthenticated) {
+      setIsAdminAuthenticated(false);
+    }
+
+    const client = getSupabaseClient();
+    if (isSupabaseConfigured() && client) {
+      const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.user?.email) {
+            const res = await authService.handleSupabaseUser(session.user);
+            if (res.valid) {
+              setIsAdminAuthenticated(true);
+            } else {
+              setIsAdminAuthenticated(false);
+              showToast(res.error || 'Access Denied: Account is unauthorized.', 'error');
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          await authService.logout();
+          setIsAdminAuthenticated(false);
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, []);
 
   // Sync language with URL changes
   useEffect(() => {
@@ -109,20 +144,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  const loginAdmin = (passcode?: string): boolean => {
-    // For local evaluation & testing, accepting 'admin123' or 'admin@digiseekho.com'
-    if (!passcode || passcode === 'admin123' || passcode.length >= 6) {
-      localStorage.setItem('digiseekho_admin_session', 'active');
+  const loginAdmin = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string; isInitialSetup?: boolean }> => {
+    const res = await authService.loginWithPassword(email, password);
+    if (res.success) {
       setIsAdminAuthenticated(true);
-      showToast('Admin session started successfully', 'success');
-      return true;
+      if (res.isInitialSetup) {
+        showToast(`Admin credentials initialized for ${AUTHORIZED_ADMIN_EMAIL}.`, 'success');
+      } else {
+        showToast('Authorized Admin session established.', 'success');
+      }
+    } else {
+      setIsAdminAuthenticated(false);
+      showToast(res.error || 'Login rejected.', 'error');
     }
-    showToast('Invalid credentials. Use admin123 to login.', 'error');
-    return false;
+    return res;
   };
 
-  const logoutAdmin = () => {
-    localStorage.removeItem('digiseekho_admin_session');
+  const logoutAdmin = async () => {
+    await authService.logout();
     setIsAdminAuthenticated(false);
     showToast('Signed out of admin dashboard', 'info');
   };

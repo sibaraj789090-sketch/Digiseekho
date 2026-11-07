@@ -135,10 +135,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 className="w-8 h-8 rounded-full object-cover"
               />
               <div className="text-left">
-                <div className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[100px]">
-                  {adminUser.full_name}
+                <div className="text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[120px]">
+                  {adminUser.full_name || 'Raj Siba'}
                 </div>
-                <div className="text-[10px] text-slate-400">Admin</div>
+                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono truncate max-w-[120px]" title={adminUser.email}>
+                  {adminUser.email}
+                </div>
               </div>
             </div>
 

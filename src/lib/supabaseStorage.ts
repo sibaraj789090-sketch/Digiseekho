@@ -1,5 +1,6 @@
 import { getSupabaseClient, isSupabaseConfigured } from './supabase';
 import { dataService } from './dataService';
+import { authService } from './authService';
 
 export interface UploadResult {
   url: string;
@@ -28,6 +29,11 @@ export async function uploadArticleImage(
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<UploadResult> {
+  // 0. Authorization guard
+  if (!authService.isSessionValid()) {
+    throw new Error('Access Denied: Only authorized administrator (rajsiba2005@gmail.com) can upload media.');
+  }
+
   // 1. Validation
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     throw new Error(`Unsupported image format (${file.type || 'unknown'}). Please upload JPEG, PNG, WebP, GIF, or SVG.`);
@@ -138,6 +144,10 @@ export async function uploadBannerImage(
   deviceType: 'desktop' | 'mobile' = 'desktop',
   onProgress?: (percent: number) => void
 ): Promise<UploadResult> {
+  if (!authService.isSessionValid()) {
+    throw new Error('Access Denied: Only authorized administrator (rajsiba2005@gmail.com) can update banners.');
+  }
+
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     throw new Error(`Unsupported image format (${file.type || 'unknown'}). Please upload JPEG, PNG, WebP, GIF, or SVG.`);
   }

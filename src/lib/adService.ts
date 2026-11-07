@@ -7,6 +7,7 @@ import {
   AdAnalyticsSummary
 } from '../types';
 import { supabase, isSupabaseConfigured, getSupabaseClient } from './supabase';
+import { authService } from './authService';
 
 const AD_STORAGE_KEYS = {
   NETWORKS: 'digiseekho_ad_networks_v2',
@@ -509,6 +510,10 @@ class AdService {
   }
 
   saveSettings(newSettings: Partial<AdSystemSettings>): AdSystemSettings {
+    if (!authService.isSessionValid()) {
+      console.warn('Unauthorized: Session for rajsiba2005@gmail.com required to change ad settings.');
+      return this.settings;
+    }
     this.settings = {
       ...this.settings,
       ...newSettings,

@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { supabase, isSupabaseConfigured, getSupabaseClient } from './supabase';
 import { INITIAL_AD_SETTINGS, adService } from './adService';
+import { authService, AUTHORIZED_ADMIN_EMAIL } from './authService';
 
 const STORAGE_KEYS = {
   POSTS: 'digiseekho_posts_v1',
@@ -25,17 +26,17 @@ const STORAGE_KEYS = {
   SUBSCRIBERS: 'digiseekho_subscribers_v1',
   SETTINGS: 'digiseekho_settings_v1',
   NAVIGATION: 'digiseekho_navigation_v1',
-  USER: 'digiseekho_admin_user_v1'
+  USER: 'digiseekho_admin_user_v2'
 };
 
-// Default Admin Profile
+// Default Authorized Admin Profile
 export const DEFAULT_ADMIN: UserProfile = {
-  id: 'usr-admin-001',
-  email: 'admin@digiseekho.com',
-  full_name: 'Aditya Sharma',
+  id: 'usr-admin-rajsiba',
+  email: AUTHORIZED_ADMIN_EMAIL,
+  full_name: 'Raj Siba',
   role: 'admin',
   avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  bio: 'Technology writer, AI researcher, and SEO strategist with 10+ years covering digital transformation in India.'
+  bio: 'DigiSeekho Super Administrator & Editorial Lead.'
 };
 
 // Initial Categories (8 categories requested)
@@ -714,6 +715,9 @@ class DataService {
   }
 
   savePost(postData: Partial<Post>): Post {
+    if (!authService.isSessionValid()) {
+      throw new Error('Access Denied: Only authorized administrator (rajsiba2005@gmail.com) can publish or edit posts.');
+    }
     const now = new Date().toISOString();
     let post: Post;
 
@@ -777,6 +781,9 @@ class DataService {
   }
 
   deletePost(id: string): boolean {
+    if (!authService.isSessionValid()) {
+      throw new Error('Access Denied: Only authorized administrator (rajsiba2005@gmail.com) can delete posts.');
+    }
     this.posts = this.posts.filter(p => p.id !== id);
     saveStored(STORAGE_KEYS.POSTS, this.posts);
     return true;
