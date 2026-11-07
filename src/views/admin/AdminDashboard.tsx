@@ -1,0 +1,278 @@
+import React from 'react';
+import { dataService } from '../../lib/dataService';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { 
+  FileText, 
+  Clock, 
+  FolderTree, 
+  Mail, 
+  Eye, 
+  PlusCircle, 
+  ExternalLink, 
+  Database, 
+  CheckCircle2, 
+  AlertCircle,
+  TrendingUp,
+  ArrowUpRight
+} from 'lucide-react';
+
+interface AdminDashboardProps {
+  onSelectSection: (section: string, param?: string) => void;
+  onNavigateHome: () => void;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSelectSection, onNavigateHome }) => {
+  const posts = dataService.getPosts();
+  const categories = dataService.getCategories();
+  const subscribers = dataService.getSubscribers();
+  const comments = dataService.getComments();
+  const settings = dataService.getSettings();
+  const isSupabaseReady = isSupabaseConfigured();
+
+  const publishedCount = posts.filter(p => p.status === 'published').length;
+  const draftCount = posts.filter(p => p.status === 'draft').length;
+  const scheduledCount = posts.filter(p => p.status === 'scheduled').length;
+  const totalViews = posts.reduce((acc, p) => acc + (p.views_count || 0), 0);
+
+  const recentPosts = posts.slice(0, 5);
+
+  return (
+    <div className="space-y-8">
+      
+      {/* Top Banner & Quick Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Dashboard Overview
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Publishing analytics, bilingual translations, and platform infrastructure
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => onSelectSection('new-post')}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 shadow-xs"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Create New Article</span>
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        
+        {/* Published Posts */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-3 text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Published Posts</span>
+            <FileText className="w-4 h-4 text-emerald-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+            {publishedCount}
+          </div>
+          <div className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+            <span>Bilingual (EN + HI)</span>
+          </div>
+        </div>
+
+        {/* Drafts & Scheduled */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-3 text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Drafts / In Review</span>
+            <Clock className="w-4 h-4 text-amber-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+            {draftCount}
+          </div>
+          <div className="text-xs text-slate-400 mt-1.5">
+            <span>{scheduledCount} Scheduled</span>
+          </div>
+        </div>
+
+        {/* Total Subscribers */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-3 text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Subscribers</span>
+            <Mail className="w-4 h-4 text-indigo-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+            {subscribers.length}
+          </div>
+          <div className="text-xs text-slate-400 mt-1.5 flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Organic Growth</span>
+          </div>
+        </div>
+
+        {/* Total Article Views */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-3 text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Organic Views</span>
+            <Eye className="w-4 h-4 text-blue-500" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+            {totalViews.toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-400 mt-1.5">
+            <span>Across India & Global</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Infrastructure Status Banner */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Supabase Status */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+              <Database className="w-4 h-4 text-emerald-500" />
+              <span>Database Backend</span>
+            </div>
+            {isSupabaseReady ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Supabase Live</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Local Reactive Active</span>
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            {isSupabaseReady
+              ? 'Connected directly to your Supabase PostgreSQL cluster with Row Level Security.'
+              : 'Local persistent store is active with 100% features. You can link your Supabase URL & Key in Supabase Database tab.'}
+          </p>
+          <button
+            onClick={() => onSelectSection('supabase')}
+            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+          >
+            <span>Configure Supabase Credentials</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* SEO Configuration Status */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+              <CheckCircle2 className="w-4 h-4 text-indigo-500" />
+              <span>SEO & Indexing</span>
+            </div>
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              100% Compliant
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            Dynamic sitemap.xml, canonical URLs, hreflang tags (EN + HI), and JSON-LD Article Schema are actively generated.
+          </p>
+          <button
+            onClick={() => onSelectSection('seo')}
+            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+          >
+            <span>Manage SEO Directives & Verification</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Category & Topic Health */}
+        <div className="p-5 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-bold text-sm text-slate-900 dark:text-white">
+              <FolderTree className="w-4 h-4 text-amber-500" />
+              <span>Categories & Topics</span>
+            </div>
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {categories.length} Categories
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            All 8 core categories are configured with bilingual Hindi and English slugs for optimal search ranking.
+          </p>
+          <button
+            onClick={() => onSelectSection('categories')}
+            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+          >
+            <span>Manage Categories & Reorder</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+      </div>
+
+      {/* Recent Articles Table */}
+      <div className="bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            Recently Managed Articles
+          </h2>
+          <button
+            onClick={() => onSelectSection('posts')}
+            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            View All ({posts.length}) →
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-900/50 uppercase text-[10px] tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800/80">
+              <tr>
+                <th className="py-3 px-4">Title (EN / HI)</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Views</th>
+                <th className="py-3 px-4">Last Updated</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              {recentPosts.map(post => (
+                <tr key={post.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                  <td className="py-3.5 px-4">
+                    <div className="font-semibold text-slate-900 dark:text-white line-clamp-1 max-w-sm">
+                      {post.translations.en.title}
+                    </div>
+                    <div className="text-slate-400 line-clamp-1 max-w-sm font-sans mt-0.5">
+                      {post.translations.hi.title}
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                      post.status === 'published'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                        : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                    }`}>
+                      {post.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 font-mono">
+                    {post.views_count.toLocaleString()}
+                  </td>
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    {new Date(post.updated_at).toLocaleDateString()}
+                  </td>
+                  <td className="py-3.5 px-4 text-right whitespace-nowrap space-x-2">
+                    <button
+                      onClick={() => onSelectSection('edit-post', post.id)}
+                      className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded font-medium transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  );
+};

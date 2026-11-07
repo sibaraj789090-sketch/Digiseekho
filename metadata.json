@@ -1,0 +1,7 @@
+{
+  "name": "DigiSeekho – Bilingual Technology & AI Blogging Platform",
+  "description": "Learn Technology. Discover AI. Grow Digitally. Production-grade bilingual (Hindi & English) editorial blogging platform with advanced SEO, Supabase database, and full admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
