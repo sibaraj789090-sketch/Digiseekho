@@ -92,8 +92,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {/* Brand & Status */}
           <div className="p-6 border-b border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between">
-              <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                DigiSeekho
+              <span className="text-xl font-black tracking-tight flex items-center">
+                <span className="bg-gradient-to-r from-slate-900 to-blue-600 dark:from-white dark:to-sky-300 bg-clip-text text-transparent">Digi</span>
+                <span className="bg-gradient-to-r from-cyan-500 to-blue-500 dark:from-cyan-300 dark:to-blue-400 bg-clip-text text-transparent">Seekho</span>
+                <span className="inline-block w-1.5 h-1.5 ml-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#00e5ff]" />
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                 PRO CMS

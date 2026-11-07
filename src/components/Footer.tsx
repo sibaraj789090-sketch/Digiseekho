@@ -22,10 +22,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <div className="lg:col-span-2 space-y-4">
             <button
               onClick={() => onNavigate(isHindi ? '/hi' : '/')}
-              className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1 focus:outline-none"
+              className="group relative inline-flex items-center gap-1.5 focus:outline-none rounded-lg py-1 transition-all"
+              aria-label="DigiSeekho Home"
             >
-              <span>DigiSeekho</span>
-              <span className="text-indigo-600 dark:text-indigo-400">.</span>
+              <span className="relative flex items-center font-black tracking-[-0.035em] text-2xl sm:text-3xl leading-none select-none drop-shadow-[0_2px_12px_rgba(30,144,255,0.22)] dark:drop-shadow-[0_2px_18px_rgba(56,189,248,0.35)]">
+                <span className="bg-gradient-to-r from-slate-900 via-blue-900 to-blue-600 dark:from-white dark:via-slate-100 dark:to-sky-300 bg-clip-text text-transparent font-extrabold">
+                  Digi
+                </span>
+                <span className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 dark:from-cyan-300 dark:via-sky-400 dark:to-blue-500 bg-clip-text text-transparent font-black">
+                  Seekho
+                </span>
+                <span className="relative flex items-center ml-1 self-baseline -translate-y-0.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-gradient-to-br from-cyan-300 via-cyan-400 to-blue-500 shadow-[0_0_10px_#00e5ff,0_0_20px_#0284c7]" />
+                </span>
+              </span>
             </button>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
               {isHindi ? settings.tagline_hi : settings.tagline_en}

@@ -58,14 +58,35 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPath }) => {
     <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#0b1329]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-8">
         
-        {/* Zone 1: Single element wordmark */}
+        {/* Zone 1: Premium AI / Tech Brand Wordmark */}
         <button
           onClick={() => handleLinkClick(isHindi ? '/hi' : '/')}
-          className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap shrink-0 flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+          className="group relative inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded-lg py-1 px-1 -ml-1 transition-all"
           aria-label="DigiSeekho Home"
         >
-          <span>DigiSeekho</span>
-          <span className="text-indigo-600 dark:text-indigo-400">.</span>
+          {/* Subtle Ambient Blue Glow Behind Logo */}
+          <span
+            className="absolute -inset-x-2 -inset-y-1 bg-gradient-to-r from-blue-600/15 via-cyan-500/20 to-blue-500/10 rounded-2xl blur-lg pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+            aria-hidden="true"
+          />
+
+          <span className="relative flex items-center font-black tracking-[-0.035em] text-2xl sm:text-[26px] md:text-3xl leading-none select-none drop-shadow-[0_2px_12px_rgba(30,144,255,0.22)] dark:drop-shadow-[0_2px_18px_rgba(56,189,248,0.35)]">
+            {/* "Digi": White-to-Blue Gradient */}
+            <span className="bg-gradient-to-r from-slate-900 via-blue-900 to-blue-600 dark:from-white dark:via-slate-100 dark:to-sky-300 bg-clip-text text-transparent font-extrabold transition-all group-hover:brightness-110">
+              Digi
+            </span>
+
+            {/* "Seekho": Bright Cyan-to-Blue Gradient */}
+            <span className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 dark:from-cyan-300 dark:via-sky-400 dark:to-blue-500 bg-clip-text text-transparent font-black transition-all group-hover:brightness-110">
+              Seekho
+            </span>
+
+            {/* Small Stylish Glowing Blue Dot */}
+            <span className="relative flex items-center ml-1 self-baseline -translate-y-0.5">
+              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-cyan-400 opacity-60 group-hover:opacity-90 duration-1000" />
+              <span className="relative inline-block w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gradient-to-br from-cyan-300 via-cyan-400 to-blue-500 shadow-[0_0_10px_#00e5ff,0_0_20px_#0284c7] ring-1 ring-cyan-200/50" />
+            </span>
+          </span>
         </button>
 
         {/* Zone 2: Clean single-line text navigation links */}

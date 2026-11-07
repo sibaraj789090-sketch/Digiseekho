@@ -73,8 +73,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
           <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-950/60 rounded-2xl flex items-center justify-center mx-auto mb-3 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 shadow-inner">
             <ShieldCheck className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            DigiSeekho Admin
+          <h1 className="text-2xl font-black tracking-tight flex items-center justify-center">
+            <span className="bg-gradient-to-r from-slate-900 to-blue-600 dark:from-white dark:to-sky-300 bg-clip-text text-transparent">Digi</span>
+            <span className="bg-gradient-to-r from-cyan-500 to-blue-500 dark:from-cyan-300 dark:to-blue-400 bg-clip-text text-transparent">Seekho</span>
+            <span className="inline-block w-2 h-2 ml-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#00e5ff]" />
+            <span className="ml-2 text-slate-800 dark:text-slate-200 font-semibold text-xl">Admin</span>
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Restricted Super Administrator Access
