@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { dataService } from '../lib/dataService';
 import { updatePageSEO, BASE_SITE_URL } from '../lib/seo';
 import { ArticleCard } from '../components/ArticleCard';
+import { AdBanner } from '../components/AdBanner';
 import { Language } from '../types';
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react';
 
@@ -80,7 +81,7 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ slug, language, onNa
       </nav>
 
       {/* Header Banner */}
-      <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-8 md:p-12 mb-10">
+      <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-8 md:p-12 mb-8">
         <div className="max-w-3xl">
           <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">
             {isHindi ? 'श्रेणी संग्रह' : 'Topic Hub'}
@@ -122,6 +123,11 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ slug, language, onNa
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Category Top Leaderboard Ad Banner */}
+      <div className="mb-10">
+        <AdBanner slotId="category_top" onNavigate={onNavigate} />
       </div>
 
       {/* Articles Grid */}

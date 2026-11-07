@@ -19,7 +19,9 @@ import {
   Moon,
   Sun,
   Shield,
-  Layers
+  Layers,
+  Share2,
+  DollarSign
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -49,6 +51,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'subscribers', label: 'Subscribers', icon: Mail },
     { id: 'seo', label: 'SEO Settings', icon: Search },
     { id: 'settings', label: 'Website Settings', icon: Settings },
+    { id: 'banner', label: 'Homepage Banner', icon: ImageIcon },
+    { id: 'social', label: 'Social Media Links', icon: Share2 },
+    { id: 'ads', label: 'Ads Management', icon: DollarSign },
     { id: 'navigation', label: 'Navigation Menu', icon: Layers },
     { id: 'supabase', label: 'Supabase Database', icon: Database },
   ];

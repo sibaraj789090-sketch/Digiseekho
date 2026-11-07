@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ArticleCard } from '../components/ArticleCard';
 import { FloatingSocialShare } from '../components/FloatingSocialShare';
+import { AdBanner } from '../components/AdBanner';
 
 interface ArticleViewProps {
   slug: string;
@@ -139,6 +140,19 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
       return `<h${level} id="heading-${idx}" class="scroll-mt-24" ${attrs}>${text}</h${level}>`;
     });
   }, [translation.content]);
+
+  // Split content by </p> for dynamic in-article ad injection
+  const contentParagraphs = useMemo(() => {
+    const parts = processedContent.split(/(<\/p>)/i);
+    const paragraphs: string[] = [];
+    for (let i = 0; i < parts.length; i += 2) {
+      const fullP = (parts[i] || '') + (parts[i + 1] || '');
+      if (fullP.trim()) {
+        paragraphs.push(fullP);
+      }
+    }
+    return paragraphs;
+  }, [processedContent]);
 
   // Related posts
   const relatedPosts = dataService.getPosts({ status: 'published' })
@@ -264,9 +278,14 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
           </h1>
 
           {/* Deck / Excerpt */}
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8 max-w-3xl">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-6 max-w-3xl">
             {translation.excerpt}
           </p>
+
+          {/* Placement: Below Article Title */}
+          <div className="mb-6">
+            <AdBanner placementId="article_title_below" onNavigate={onNavigate} />
+          </div>
 
           {/* Author & Publication Details - Unboxed inline text */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
@@ -298,8 +317,13 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
         </div>
       </div>
 
+      {/* Article Top Banner Ad */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <AdBanner slotId="article_top" onNavigate={onNavigate} />
+      </div>
+
       {/* 3. Featured Image */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-12">
         <div className="aspect-16/9 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-md">
           <img
             src={post.featured_image}
@@ -313,6 +337,11 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
             {post.image_alt}
           </p>
         )}
+
+        {/* Placement: Below Featured Image */}
+        <div className="mt-4">
+          <AdBanner placementId="article_image_below" onNavigate={onNavigate} />
+        </div>
       </div>
 
       {/* 4. Reading Canvas & Sidebar Grid */}
@@ -343,7 +372,7 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
               </div>
             )}
 
-            {/* Rich Article Prose Body */}
+            {/* Rich Article Prose Body with Dynamic In-Article Ad Injections */}
             <div 
               className="prose dark:prose-invert max-w-none prose-slate text-base sm:text-lg leading-relaxed
                 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white
@@ -354,8 +383,57 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
                 prose-blockquote:border-l-0 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:my-6 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-[#0f172a] prose-blockquote:border prose-blockquote:border-slate-200 dark:prose-blockquote:border-slate-800 prose-blockquote:rounded-xl prose-blockquote:text-slate-700 dark:prose-blockquote:text-slate-300 prose-blockquote:italic
                 prose-code:text-indigo-600 dark:prose-code:text-indigo-400 prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
               "
-              dangerouslySetInnerHTML={{ __html: processedContent }}
-            />
+            >
+              {contentParagraphs.length > 0 ? (
+                contentParagraphs.map((paraHtml, pIdx) => {
+                  const isFirstPara = pIdx === 0;
+                  const isThirdPara = pIdx === 2;
+                  const isMidPara = pIdx === Math.floor(contentParagraphs.length / 2);
+                  const isBeforeConclusion = pIdx === contentParagraphs.length - 2;
+
+                  return (
+                    <React.Fragment key={pIdx}>
+                      <div dangerouslySetInnerHTML={{ __html: paraHtml }} />
+
+                      {/* After First Paragraph Ad */}
+                      {isFirstPara && (
+                        <div className="my-6 not-prose">
+                          <AdBanner placementId="article_para_1" onNavigate={onNavigate} />
+                        </div>
+                      )}
+
+                      {/* After Third Paragraph Ad */}
+                      {isThirdPara && (
+                        <div className="my-6 not-prose">
+                          <AdBanner placementId="article_para_3" onNavigate={onNavigate} />
+                        </div>
+                      )}
+
+                      {/* Middle of Article Content Ad */}
+                      {isMidPara && pIdx > 2 && (
+                        <div className="my-6 not-prose">
+                          <AdBanner placementId="article_mid_content" onNavigate={onNavigate} />
+                        </div>
+                      )}
+
+                      {/* Before Conclusion Ad */}
+                      {isBeforeConclusion && pIdx > 3 && (
+                        <div className="my-6 not-prose">
+                          <AdBanner placementId="article_before_conclusion" onNavigate={onNavigate} />
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <div dangerouslySetInnerHTML={{ __html: processedContent }} />
+              )}
+            </div>
+
+            {/* After Article Content Ad */}
+            <div className="my-8">
+              <AdBanner placementId="article_after_content" onNavigate={onNavigate} />
+            </div>
 
             {/* Article Tags */}
             {post.tags && post.tags.length > 0 && (
@@ -573,6 +651,11 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
               </p>
             </div>
 
+            {/* Sticky Sidebar Rectangle Ad */}
+            <div className="mt-6">
+              <AdBanner slotId="article_sidebar" onNavigate={onNavigate} />
+            </div>
+
           </aside>
 
         </div>
@@ -581,6 +664,11 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
       {/* 6. Related Articles */}
       {relatedPosts.length > 0 && (
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-12 border-t border-slate-200 dark:border-slate-800">
+          {/* Related Articles Section Ad Placement */}
+          <div className="mb-8">
+            <AdBanner placementId="article_related_section" onNavigate={onNavigate} />
+          </div>
+
           <h3 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-8">
             {isHindi ? 'संबंधित लेख' : 'Related Articles'}
           </h3>

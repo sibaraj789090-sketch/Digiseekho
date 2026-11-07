@@ -23,6 +23,7 @@ import { AdminComments } from './views/admin/AdminComments';
 import { AdminSubscribers } from './views/admin/AdminSubscribers';
 import { AdminSEO } from './views/admin/AdminSEO';
 import { AdminSettings } from './views/admin/AdminSettings';
+import { AdminAdsManager } from './views/admin/AdminAdsManager';
 import { AdminNavigation } from './views/admin/AdminNavigation';
 import { AdminSupabase } from './views/admin/AdminSupabase';
 
@@ -105,10 +106,13 @@ const MainApp: React.FC = () => {
         {currentSection === 'comments' && <AdminComments />}
         {currentSection === 'subscribers' && <AdminSubscribers />}
         {currentSection === 'seo' && <AdminSEO />}
-        {currentSection === 'settings' && <AdminSettings />}
+        {currentSection === 'settings' && <AdminSettings initialTab="banner" onNavigateHome={() => navigate('/')} />}
+        {currentSection === 'banner' && <AdminSettings initialTab="banner" onNavigateHome={() => navigate('/')} />}
+        {currentSection === 'social' && <AdminSettings initialTab="social" onNavigateHome={() => navigate('/')} />}
+        {currentSection === 'ads' && <AdminAdsManager onNavigateHome={() => navigate('/')} />}
         {currentSection === 'navigation' && <AdminNavigation />}
         {currentSection === 'supabase' && <AdminSupabase />}
-        {currentSection === 'profile' && <AdminSettings />}
+        {currentSection === 'profile' && <AdminSettings initialTab="general" onNavigateHome={() => navigate('/')} />}
       </AdminLayout>
     );
   }

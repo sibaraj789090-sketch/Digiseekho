@@ -1,38 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { dataService } from '../lib/dataService';
 import { ArticleCard } from '../components/ArticleCard';
-import { Search, Sparkles, TrendingUp, BookOpen, ArrowRight, CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
+import { SocialFollowSection } from '../components/SocialFollowSection';
+import { CategoryNavSection } from '../components/CategoryNavSection';
+import { AdBanner } from '../components/AdBanner';
+import { TrendingUp, ArrowRight, Mail, CheckCircle2 } from 'lucide-react';
 
 interface HomeViewProps {
   onNavigate: (path: string) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
-  const { language, setSearchOpen, showToast } = useApp();
+  const { language, showToast } = useApp();
   const isHindi = language === 'hi';
 
-  const [heroSearch, setHeroSearch] = useState('');
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribedSuccess, setSubscribedSuccess] = useState(false);
+  const [banner, setBanner] = useState(() => dataService.getBanner());
+
+  useEffect(() => {
+    const handleBannerUpdate = () => {
+      setBanner(dataService.getBanner());
+    };
+    window.addEventListener('digiseekho_settings_changed', handleBannerUpdate);
+    window.addEventListener('digiseekho_banner_changed', handleBannerUpdate);
+    window.addEventListener('storage', handleBannerUpdate);
+    return () => {
+      window.removeEventListener('digiseekho_settings_changed', handleBannerUpdate);
+      window.removeEventListener('digiseekho_banner_changed', handleBannerUpdate);
+      window.removeEventListener('storage', handleBannerUpdate);
+    };
+  }, []);
 
   const posts = dataService.getPosts({ status: 'published' });
   const categories = dataService.getCategories();
-  const settings = dataService.getSettings();
 
   const featuredPost = posts.find(p => p.is_featured) || posts[0];
   const secondaryPosts = posts.filter(p => p.id !== featuredPost?.id).slice(0, 2);
   const latestPosts = posts.filter(p => p.id !== featuredPost?.id).slice(0, 6);
   const trendingPosts = posts.filter(p => p.is_trending).slice(0, 4);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!heroSearch.trim()) return;
-    const path = isHindi 
-      ? `/hi/search?q=${encodeURIComponent(heroSearch.trim())}` 
-      : `/search?q=${encodeURIComponent(heroSearch.trim())}`;
-    onNavigate(path);
-  };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,79 +54,72 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="space-y-16 sm:space-y-24 pb-20">
+    <div className="space-y-10 sm:space-y-16 pb-20">
       
-      {/* 1. Hero Section */}
-      <section className="relative pt-12 md:pt-18 pb-10 border-b border-slate-200/80 dark:border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            {/* Editorial Kicker */}
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-4">
-              <span>{isHindi ? 'भारत का अग्रणी तकनीकी प्रकाशन' : 'India\'s Premier Bilingual Tech Journal'}</span>
-              <span aria-hidden="true">·</span>
-              <span>2026 Edition</span>
-            </div>
-
-            {/* Dominant Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.12] mb-6 [text-wrap:balance]">
-              {isHindi ? (
-                <>
-                  सीखें तकनीक. <span className="text-indigo-600 dark:text-indigo-400">खोजें AI.</span> बढ़ें डिजिटली.
-                </>
+      {/* 1. Placement: Below Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+        <AdBanner placementId="home_header_below" onNavigate={onNavigate} />
+      </div>
+      
+      {/* 2. DigiSeekho Custom Hero Banner Section */}
+      {banner.enabled && banner.desktop_image_url && (
+        <section className="relative pt-2 sm:pt-4 pb-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="group relative w-full overflow-hidden rounded-2xl md:rounded-3xl shadow-xl shadow-indigo-950/10 dark:shadow-black/50 border border-slate-200/80 dark:border-slate-800/80 bg-slate-950 transition-all duration-300">
+              {banner.link_url ? (
+                <a
+                  href={banner.link_url}
+                  target={banner.open_in_new_tab ? '_blank' : undefined}
+                  rel={banner.open_in_new_tab ? 'noopener noreferrer' : undefined}
+                  className="block w-full focus:outline-none focus:ring-4 focus:ring-indigo-500/30 rounded-2xl md:rounded-3xl cursor-pointer"
+                  aria-label={banner.alt_text || 'DigiSeekho Banner'}
+                >
+                  <picture className="block w-full">
+                    {banner.mobile_image_url && (
+                      <source media="(max-width: 640px)" srcSet={banner.mobile_image_url} />
+                    )}
+                    <img
+                      src={banner.desktop_image_url}
+                      alt={banner.alt_text || 'DigiSeekho – Learn Technology. Discover AI. Grow Digitally.'}
+                      className="w-full h-auto object-contain block select-none transform transition-transform duration-500 group-hover:scale-[1.003]"
+                      loading="eager"
+                      fetchPriority="high"
+                    />
+                  </picture>
+                </a>
               ) : (
-                <>
-                  Learn Technology. <span className="text-indigo-600 dark:text-indigo-400">Discover AI.</span> Grow Digitally.
-                </>
+                <picture className="block w-full">
+                  {banner.mobile_image_url && (
+                    <source media="(max-width: 640px)" srcSet={banner.mobile_image_url} />
+                  )}
+                  <img
+                    src={banner.desktop_image_url}
+                    alt={banner.alt_text || 'DigiSeekho – Learn Technology. Discover AI. Grow Digitally.'}
+                    className="w-full h-auto object-contain block select-none"
+                    loading="eager"
+                    fetchPriority="high"
+                  />
+                </picture>
               )}
-            </h1>
-
-            {/* Subtitle / Value Proposition */}
-            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8 max-w-2xl">
-              {isHindi
-                ? 'आर्टिफिशियल इंटेलिजेंस, गूगल एसईओ, डिजिटल कौशल और आधुनिक ऑनलाइन सुरक्षा पर गहन, व्यावहारिक और निष्पक्ष विश्लेषण।'
-                : 'Actionable deep dives, prompt engineering guides, organic SEO tactics, and digital literacy tailored for builders and creators.'}
-            </p>
-
-            {/* Hero Search Box */}
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center max-w-xl mb-6">
-              <Search className="absolute left-4 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                value={heroSearch}
-                onChange={e => setHeroSearch(e.target.value)}
-                placeholder={isHindi ? 'विषय खोजें: "ChatGPT", "SEO", "AI Tools"...' : 'Search topics: "ChatGPT", "SEO", "AI Tools"...'}
-                className="w-full pl-12 pr-28 py-3.5 bg-white dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm md:text-base placeholder-slate-400"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 px-4 py-2 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white text-xs md:text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
-              >
-                {isHindi ? 'खोजें' : 'Search'}
-              </button>
-            </form>
-
-            {/* Fast Category Filter Chips (Functional interactive buttons) */}
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              <span className="font-medium text-slate-600 dark:text-slate-300">{isHindi ? 'लोकप्रिय:' : 'Trending:'}</span>
-              {categories.slice(0, 4).map(cat => {
-                const trans = cat.translations[language];
-                const catPath = isHindi ? `/hi/category/${trans.slug}` : `/category/${trans.slug}`;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => onNavigate(catPath)}
-                    className="hover:text-indigo-600 dark:hover:text-indigo-400 underline underline-offset-2 transition-colors"
-                  >
-                    {trans.name}
-                  </button>
-                );
-              })}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* 2. Featured Lead Article & Secondary Features (3-Tier Salience) */}
+      {/* 3. Placement: Below Homepage Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner placementId="home_banner_below" onNavigate={onNavigate} />
+      </div>
+
+      {/* 4. Category Navigation Shortcuts (AI Tools, Technology, Mobile Apps, How-To Guides, Blogging & SEO) */}
+      <CategoryNavSection onNavigate={onNavigate} />
+
+      {/* 5. Placement: Below Category Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner placementId="home_category_nav_below" onNavigate={onNavigate} />
+      </div>
+
+      {/* 6. Featured Lead Article & Secondary Features */}
       {featuredPost && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
@@ -151,7 +151,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </section>
       )}
 
-      {/* 3. Trending Articles Section (Numbered Editorial Salience) */}
+      {/* 7. Placement: Between Featured Editorial and Articles */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner placementId="home_featured_between" onNavigate={onNavigate} />
+      </div>
+
+      {/* 8. Trending Articles Section */}
       <section className="bg-slate-100/60 dark:bg-[#070b16] py-14 border-y border-slate-200/80 dark:border-slate-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-2">
@@ -173,7 +178,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   className="bg-white dark:bg-[#0f172a] p-6 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between group"
                 >
                   <div>
-                    {/* Editorial Number */}
                     <span className="font-mono text-2xl font-bold text-slate-300 dark:text-slate-700 block mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       0{index + 1}.
                     </span>
@@ -194,7 +198,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 4. Latest Articles Grid */}
+      {/* 9. Latest Articles Grid with "Between Article Cards" Placement */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -215,7 +219,21 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {latestPosts.map(post => (
+          {latestPosts.slice(0, 3).map(post => (
+            <ArticleCard
+              key={post.id}
+              post={post}
+              language={language}
+              onNavigate={onNavigate}
+            />
+          ))}
+
+          {/* Placement: Between Article Cards */}
+          <div className="col-span-full py-2">
+            <AdBanner placementId="home_cards_between" onNavigate={onNavigate} />
+          </div>
+
+          {latestPosts.slice(3, 6).map(post => (
             <ArticleCard
               key={post.id}
               post={post}
@@ -226,7 +244,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 5. Browse by Category Section */}
+      {/* 10. Browse by Category Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -260,7 +278,15 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 6. Newsletter Subscription */}
+      {/* 11. Follow DigiSeekho - Social Media Section */}
+      <SocialFollowSection />
+
+      {/* 12. Placement: Above Newsletter Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner placementId="home_newsletter_above" onNavigate={onNavigate} />
+      </section>
+
+      {/* 13. Preserved Newsletter Subscription Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-linear-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-8 sm:p-12 lg:p-16 relative overflow-hidden shadow-xl">
           <div className="max-w-2xl relative z-10">
@@ -315,6 +341,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* 14. Placement: Footer Advertisement */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdBanner placementId="home_footer" onNavigate={onNavigate} />
       </section>
 
     </div>

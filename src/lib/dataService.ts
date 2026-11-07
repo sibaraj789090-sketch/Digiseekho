@@ -6,11 +6,15 @@ import {
   Comment,
   NewsletterSubscriber,
   SiteSettings,
+  HomepageBanner,
+  SocialMediaSettings,
+  SocialPlatformConfig,
   NavigationItem,
   UserProfile,
   Language
 } from '../types';
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured, getSupabaseClient } from './supabase';
+import { INITIAL_AD_SETTINGS, adService } from './adService';
 
 const STORAGE_KEYS = {
   POSTS: 'digiseekho_posts_v1',
@@ -529,6 +533,34 @@ export const INITIAL_COMMENTS: Comment[] = [
   }
 ];
 
+// Initial Social Media Platforms
+export const INITIAL_SOCIAL_MEDIA: SocialMediaSettings = {
+  section_title_en: 'Follow DigiSeekho',
+  section_title_hi: 'DigiSeekho को फॉलो करें',
+  section_subtitle_en: 'Stay connected with us for the latest AI, Technology and Digital Updates.',
+  section_subtitle_hi: 'नवीनतम एआई, तकनीक और डिजिटल अपडेट के लिए हमसे जुड़े रहें।',
+  youtube: {
+    url: 'https://youtube.com/@digiseekho',
+    enabled: true,
+    label: 'YouTube'
+  },
+  facebook: {
+    url: 'https://facebook.com/digiseekho',
+    enabled: true,
+    label: 'Facebook'
+  },
+  instagram: {
+    url: 'https://instagram.com/digiseekho',
+    enabled: true,
+    label: 'Instagram'
+  },
+  telegram: {
+    url: 'https://t.me/digiseekho',
+    enabled: true,
+    label: 'Telegram'
+  }
+};
+
 // Initial Site Settings
 export const INITIAL_SETTINGS: SiteSettings = {
   website_name: 'DigiSeekho',
@@ -540,12 +572,25 @@ export const INITIAL_SETTINGS: SiteSettings = {
   homepage_seo_title_hi: 'DigiSeekho – तकनीक सीखें, AI खोजें, डिजिटली आगे बढ़ें',
   homepage_meta_description_en: 'India\'s premier bilingual publication for mastering Artificial Intelligence, modern digital skills, blogging, SEO, and practical tech guides.',
   homepage_meta_description_hi: 'आर्टिफिशियल इंटेलिजेंस, डिजिटल स्किल्स, ब्लॉगिंग और ऑनलाइन टेक्नोलॉजी सीखने का भारत का अग्रणी द्विभाषी प्लेटफॉर्म।',
+  homepage_banner: {
+    enabled: true,
+    desktop_image_url: '/assets/aistudio/file_0000000058e88211828c5103c84bb209_aa3cdfea.png',
+    mobile_image_url: '',
+    alt_text: 'DigiSeekho – Learn Technology. Discover AI. Grow Digitally. Your Complete Tech Learning Hub',
+    link_url: '',
+    open_in_new_tab: false,
+    updated_at: '2026-11-07T01:30:00Z'
+  },
+  social_media: INITIAL_SOCIAL_MEDIA,
+  ads: INITIAL_AD_SETTINGS,
   social_links: {
     twitter: 'https://twitter.com/digiseekho',
     youtube: 'https://youtube.com/@digiseekho',
     linkedin: 'https://linkedin.com/company/digiseekho',
     github: 'https://github.com/digiseekho',
-    facebook: 'https://facebook.com/digiseekho'
+    facebook: 'https://facebook.com/digiseekho',
+    instagram: 'https://instagram.com/digiseekho',
+    telegram: 'https://t.me/digiseekho'
   },
   contact_email: 'contact@digiseekho.com',
   footer_text_en: '© 2026 DigiSeekho. All rights reserved. High quality bilingual tech journalism empowering readers across India and globally.',
@@ -606,6 +651,18 @@ class DataService {
       { id: 'sub-2', email: 'priya.marketing@gmail.com', language: 'hi', is_active: true, subscribed_at: '2026-03-18T11:20:00Z' }
     ]);
     this.settings = loadStored(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+    if (!this.settings.homepage_banner) {
+      this.settings.homepage_banner = INITIAL_SETTINGS.homepage_banner;
+      saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+    }
+    if (!this.settings.social_media) {
+      this.settings.social_media = INITIAL_SOCIAL_MEDIA;
+      saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+    }
+    if (!this.settings.ads) {
+      this.settings.ads = INITIAL_AD_SETTINGS;
+      saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+    }
     this.navigation = loadStored(STORAGE_KEYS.NAVIGATION, INITIAL_NAVIGATION);
     this.adminUser = loadStored(STORAGE_KEYS.USER, DEFAULT_ADMIN);
   }
@@ -899,7 +956,114 @@ class DataService {
   saveSettings(newSettings: Partial<SiteSettings>): SiteSettings {
     this.settings = { ...this.settings, ...newSettings };
     saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('digiseekho_settings_changed', { detail: this.settings }));
+    }
     return this.settings;
+  }
+
+  getBanner(): HomepageBanner {
+    return this.settings.homepage_banner || INITIAL_SETTINGS.homepage_banner!;
+  }
+
+  saveBanner(banner: HomepageBanner): HomepageBanner {
+    const updatedBanner: HomepageBanner = {
+      ...banner,
+      updated_at: new Date().toISOString()
+    };
+    this.settings = {
+      ...this.settings,
+      homepage_banner: updatedBanner
+    };
+    saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('digiseekho_settings_changed', { detail: this.settings }));
+      window.dispatchEvent(new CustomEvent('digiseekho_banner_changed', { detail: updatedBanner }));
+    }
+
+    // Real-time synchronization to Supabase PostgreSQL database if connected
+    const supabaseClient = getSupabaseClient();
+    if (isSupabaseConfigured() && supabaseClient) {
+      (async () => {
+        try {
+          const { error } = await supabaseClient
+            .from('site_settings')
+            .upsert({
+              key: 'homepage_banner',
+              value: updatedBanner,
+              updated_at: new Date().toISOString()
+            });
+          if (error) {
+            console.warn('Supabase site_settings sync notice:', error.message);
+          }
+        } catch (err: any) {
+          console.warn('Supabase sync catch:', err?.message || err);
+        }
+      })();
+    }
+
+    return updatedBanner;
+  }
+
+  getSocialMedia(): SocialMediaSettings {
+    return this.settings.social_media || INITIAL_SOCIAL_MEDIA;
+  }
+
+  saveSocialMedia(social: SocialMediaSettings): SocialMediaSettings {
+    const updatedSocial: SocialMediaSettings = {
+      ...social,
+      updated_at: new Date().toISOString()
+    };
+    this.settings = {
+      ...this.settings,
+      social_media: updatedSocial,
+      social_links: {
+        ...this.settings.social_links,
+        youtube: updatedSocial.youtube.url,
+        facebook: updatedSocial.facebook.url,
+        instagram: updatedSocial.instagram.url,
+        telegram: updatedSocial.telegram.url
+      }
+    };
+    saveStored(STORAGE_KEYS.SETTINGS, this.settings);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('digiseekho_settings_changed', { detail: this.settings }));
+      window.dispatchEvent(new CustomEvent('digiseekho_social_changed', { detail: updatedSocial }));
+    }
+
+    // Sync to Supabase PostgreSQL database if connected
+    const supabaseClient = getSupabaseClient();
+    if (isSupabaseConfigured() && supabaseClient) {
+      (async () => {
+        try {
+          const { error } = await supabaseClient
+            .from('site_settings')
+            .upsert({
+              key: 'social_links',
+              value: updatedSocial,
+              updated_at: new Date().toISOString()
+            });
+          if (error) {
+            console.warn('Supabase social_links sync notice:', error.message);
+          }
+        } catch (err: any) {
+          console.warn('Supabase social sync catch:', err?.message || err);
+        }
+      })();
+    }
+
+    return updatedSocial;
+  }
+
+  // --- AD MANAGEMENT (DELEGATED TO ADSERVICE) ---
+  getAds() {
+    return adService.getSettings();
+  }
+
+  saveAds(ads: any) {
+    return adService.saveSettings(ads);
   }
 
   // --- NAVIGATION ---
