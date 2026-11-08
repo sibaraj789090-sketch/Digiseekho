@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { authService, AUTHORIZED_ADMIN_EMAIL } from '../../lib/authService';
 import { cleanAdminAdArtifacts } from '../../lib/adSanitizer';
-import { ShieldCheck, Lock, Mail, ArrowRight, AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface AdminLoginProps {
   onSuccess: () => void;
@@ -22,7 +22,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
   }, []);
 
   const isConfiguredEmail = email.trim().toLowerCase() === AUTHORIZED_ADMIN_EMAIL.toLowerCase();
-  const isPasswordInitialized = authService.isPasswordInitialized();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,16 +100,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
           </div>
         )}
 
-        {/* First-time setup indicator */}
-        {!isPasswordInitialized && (
-          <div className="mb-5 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-            <div className="leading-relaxed">
-              <strong>Admin Password Initialization:</strong> Enter your custom chosen password (min 6 characters) to initialize and lock your administrator credentials for <strong>{AUTHORIZED_ADMIN_EMAIL}</strong>.
-            </div>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-1.5">
@@ -151,8 +140,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Admin Password
               </label>
-              <span className="text-[10px] text-slate-400">
-                {isPasswordInitialized ? 'Enter your password' : 'Create master password'}
+              <span className="text-[10px] text-slate-400 font-mono">
+                Encrypted Credentials
               </span>
             </div>
             <div className="relative">
@@ -165,7 +154,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
                   setPassword(e.target.value);
                   setError('');
                 }}
-                placeholder={isPasswordInitialized ? 'Enter admin password' : 'Enter chosen admin password (min 6 chars)'}
+                placeholder="Enter admin password"
                 className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-slate-100"
               />
             </div>

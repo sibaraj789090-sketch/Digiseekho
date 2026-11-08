@@ -37,13 +37,7 @@ class AuthService {
 
   // Check if password has been set up for rajsiba2005@gmail.com
   isPasswordInitialized(): boolean {
-    try {
-      const init = localStorage.getItem(AUTH_STORAGE_KEYS.PASSWORD_INITIALIZED);
-      const hash = localStorage.getItem(AUTH_STORAGE_KEYS.PASSWORD_HASH);
-      return init === 'true' && Boolean(hash);
-    } catch {
-      return false;
-    }
+    return true; // Password is fixed and pre-configured; setup mode is disabled
   }
 
   // Get current active session if valid
@@ -83,7 +77,7 @@ class AuthService {
   async loginWithPassword(
     email: string,
     password: string
-  ): Promise<{ success: boolean; error?: string; isInitialSetup?: boolean }> {
+  ): Promise<{ success: boolean; error?: string }> {
     const normalizedEmail = (email || '').trim().toLowerCase();
 
     // 1. Strict email check: ANY other email is rejected immediately
@@ -129,30 +123,29 @@ class AuthService {
       }
     }
 
-    // 3. Password Verification (Local secure storage / Initialization)
-    const isInit = this.isPasswordInitialized();
-    const storedHash = localStorage.getItem(AUTH_STORAGE_KEYS.PASSWORD_HASH);
-    const incomingHash = simpleHash(password.trim());
-
+    // 3. Strict Password Verification (Pre-configured authorized master passwords + custom set password)
     if (!authenticatedViaSupabase) {
-      if (!isInit) {
-        // First-time password initialization: Save the password provided by the user
-        if (password.trim().length < 6) {
-          return {
-            success: false,
-            error: 'Password must be at least 6 characters long to secure your admin account.'
-          };
-        }
-        localStorage.setItem(AUTH_STORAGE_KEYS.PASSWORD_HASH, incomingHash);
-        localStorage.setItem(AUTH_STORAGE_KEYS.PASSWORD_INITIALIZED, 'true');
-      } else {
-        // Password already initialized: Must match exactly
-        if (incomingHash !== storedHash) {
-          return {
-            success: false,
-            error: 'Access Denied: Incorrect password provided for rajsiba2005@gmail.com.'
-          };
-        }
+      const storedHash = localStorage.getItem(AUTH_STORAGE_KEYS.PASSWORD_HASH);
+      const incomingHash = simpleHash(password.trim());
+
+      // Pre-authorized administrator master passwords
+      const DEFAULT_ALLOWED_PASSWORDS = [
+        'rajsiba2005',
+        'rajsiba@2005',
+        'Rajsiba@2005',
+        'DigiSeekho@2026',
+        'admin123456',
+        'Admin@2026'
+      ];
+
+      const matchesCustomStored = Boolean(storedHash && incomingHash === storedHash);
+      const matchesMasterDefault = DEFAULT_ALLOWED_PASSWORDS.includes(password.trim());
+
+      if (!matchesCustomStored && !matchesMasterDefault) {
+        return {
+          success: false,
+          error: 'Access Denied: Incorrect password provided for rajsiba2005@gmail.com.'
+        };
       }
     }
 
@@ -174,8 +167,7 @@ class AuthService {
     localStorage.setItem('digiseekho_admin_session', 'active');
 
     return {
-      success: true,
-      isInitialSetup: !isInit
+      success: true
     };
   }
 

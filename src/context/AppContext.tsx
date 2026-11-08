@@ -17,7 +17,7 @@ interface AppContextType {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   isAdminAuthenticated: boolean;
-  loginAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string; isInitialSetup?: boolean }>;
+  loginAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logoutAdmin: () => void;
   adminUser: UserProfile;
   searchOpen: boolean;
@@ -147,15 +147,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loginAdmin = async (
     email: string,
     password: string
-  ): Promise<{ success: boolean; error?: string; isInitialSetup?: boolean }> => {
+  ): Promise<{ success: boolean; error?: string }> => {
     const res = await authService.loginWithPassword(email, password);
     if (res.success) {
       setIsAdminAuthenticated(true);
-      if (res.isInitialSetup) {
-        showToast(`Admin credentials initialized for ${AUTHORIZED_ADMIN_EMAIL}.`, 'success');
-      } else {
-        showToast('Authorized Admin session established.', 'success');
-      }
+      showToast('Authorized Admin session established.', 'success');
     } else {
       setIsAdminAuthenticated(false);
       showToast(res.error || 'Login rejected.', 'error');
