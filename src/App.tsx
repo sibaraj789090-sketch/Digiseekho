@@ -12,6 +12,8 @@ import { SearchView } from './views/SearchView';
 import { StaticPageView } from './views/StaticPageView';
 import { SEOToolsView } from './views/SEOToolsView';
 import { analyticsService } from './lib/analyticsService';
+import { PublicAdScripts } from './components/PublicAdScripts';
+import { cleanAdminAdArtifacts } from './lib/adSanitizer';
 
 // Admin Views
 import { AdminLogin } from './views/admin/AdminLogin';
@@ -50,6 +52,8 @@ const MainApp: React.FC = () => {
         );
       }, 100);
       return () => clearTimeout(timer);
+    } else if (route.view === 'admin') {
+      cleanAdminAdArtifacts();
     }
   }, [route.rawPath, route.view, route.language]);
 
@@ -145,6 +149,7 @@ const MainApp: React.FC = () => {
   // Public Website Shell
   return (
     <div className="min-h-screen flex flex-col bg-[#fafbfc] dark:bg-[#080d1a] text-slate-900 dark:text-slate-100 transition-colors">
+      <PublicAdScripts />
       <Header onNavigate={navigate} currentPath={route.rawPath} />
 
       <main className="flex-1">

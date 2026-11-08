@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { DEFAULT_AUTHOR_AVATAR } from '../../lib/imageUtils';
+import { cleanAdminAdArtifacts } from '../../lib/adSanitizer';
 import {
   LayoutDashboard,
   FileText,
@@ -42,6 +43,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const { logoutAdmin, adminUser, theme, toggleTheme } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // Guarantee ZERO ads exist inside the admin panel
+  useEffect(() => {
+    cleanAdminAdArtifacts();
+    const interval = setInterval(cleanAdminAdArtifacts, 1500);
+    return () => clearInterval(interval);
+  }, []);
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'visitors', label: 'Real Visitors', icon: Users },
@@ -67,7 +75,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070b16] flex flex-col md:flex-row text-slate-900 dark:text-slate-100">
+    <div
+      data-admin-panel="true"
+      className="min-h-screen bg-slate-50 dark:bg-[#070b16] flex flex-col md:flex-row text-slate-900 dark:text-slate-100"
+    >
       
       {/* Mobile Header Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800">

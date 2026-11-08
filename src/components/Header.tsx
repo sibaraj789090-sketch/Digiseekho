@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentPath }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#0b1329]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-[#0b1329]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-8">
         
         {/* Zone 1: Premium AI / Tech Brand Wordmark */}

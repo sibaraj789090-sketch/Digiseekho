@@ -18,7 +18,12 @@ export const FloatingSkyscraper: React.FC<FloatingSkyscraperProps> = ({ onNaviga
   }
 
   // Guard: Never render on admin routes
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.pathname.startsWith('/admin') ||
+     window.location.pathname.includes('/admin') ||
+     Boolean(document.querySelector('[data-admin-panel="true"]')))
+  ) {
     return null;
   }
 

@@ -57,11 +57,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   return (
     <div className="space-y-10 sm:space-y-16 pb-20">
       
-      {/* 1. Placement: Below Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
-        <AdBanner placementId="home_header_below" onNavigate={onNavigate} />
-      </div>
-      
       {/* 2. DigiSeekho Custom Hero Banner Section */}
       {banner.enabled && banner.desktop_image_url && (
         <section className="relative pt-2 sm:pt-4 pb-2">

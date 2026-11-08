@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { authService, AUTHORIZED_ADMIN_EMAIL } from '../../lib/authService';
+import { cleanAdminAdArtifacts } from '../../lib/adSanitizer';
 import { ShieldCheck, Lock, Mail, ArrowRight, AlertTriangle, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface AdminLoginProps {
@@ -15,6 +16,10 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    cleanAdminAdArtifacts();
+  }, []);
 
   const isConfiguredEmail = email.trim().toLowerCase() === AUTHORIZED_ADMIN_EMAIL.toLowerCase();
   const isPasswordInitialized = authService.isPasswordInitialized();
@@ -65,7 +70,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onNavigateHom
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070b16] flex items-center justify-center p-4">
+    <div data-admin-panel="true" className="min-h-screen bg-slate-50 dark:bg-[#070b16] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8">
         
         {/* Brand & Security Header */}

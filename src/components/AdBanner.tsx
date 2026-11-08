@@ -73,8 +73,16 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     (placement.code?.includes('container-ae6aed7d96190fde7b38946cb1caf448') || placement.code?.includes('bauval.org/21'))
   );
 
+  // Guard: Admin safety check - Never execute or render on admin routes under ANY condition
+  const isAdminRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/admin') ||
+    window.location.pathname.includes('/admin') ||
+    Boolean(document.querySelector('[data-admin-panel="true"]'))
+  );
+
   // Native container script loader
   useEffect(() => {
+    if (isAdminRoute) return;
     if (isNativeContainerCode) {
       const scriptSrc = 'https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448';
       let existing = document.querySelector(`script[src="${scriptSrc}"]`) as HTMLScriptElement | null;
@@ -86,10 +94,11 @@ export const AdBanner: React.FC<AdBannerProps> = ({
         document.head.appendChild(existing);
       }
     }
-  }, [isNativeContainerCode]);
+  }, [isNativeContainerCode, isAdminRoute]);
 
   // Code embed injection effect for standard codes
   useEffect(() => {
+    if (isAdminRoute) return;
     if (
       placement &&
       placement.ad_type === 'code' &&
@@ -122,18 +131,19 @@ export const AdBanner: React.FC<AdBannerProps> = ({
         console.warn('Ad code rendering notice:', err);
       }
     }
-  }, [placement?.code, placement?.ad_type, isAtOptionsCode, isNativeContainerCode]);
+  }, [placement?.code, placement?.ad_type, isAtOptionsCode, isNativeContainerCode, isAdminRoute]);
 
   // Record real impression once when mounted and visible
   useEffect(() => {
+    if (isAdminRoute) return;
     if (!forceShowForPreview && placement && placement.enabled && settings.global_enabled && !impressionRecorded.current) {
       impressionRecorded.current = true;
       adService.recordEvent(effectiveId, 'impression', isMobile ? 'mobile' : 'desktop');
     }
-  }, [forceShowForPreview, placement, settings.global_enabled, effectiveId, isMobile]);
+  }, [forceShowForPreview, placement, settings.global_enabled, effectiveId, isMobile, isAdminRoute]);
 
-  // Guard: Admin safety check - Never render on admin routes
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !forceShowForPreview) {
+  // Guard: Absolute Admin safety check - Never render on admin routes
+  if (isAdminRoute) {
     return null;
   }
 

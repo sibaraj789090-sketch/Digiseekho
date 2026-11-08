@@ -170,7 +170,7 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     name: 'Homepage: Below Header',
     group: 'homepage',
     description: 'Prominent 728x90 Leaderboard directly below the top website header and navigation.',
-    enabled: true,
+    enabled: false, // Disabled per user request
     network_id: 'custom',
     ad_type: 'code',
     code: AD_CODE_728X90,
@@ -864,6 +864,10 @@ l.parentNode.insertBefore(s, l);
 
     // Homepage slots
     setPlacementCode('home_header_below', AD_CODE_728X90, '728x90 Leaderboard');
+    const pTopHdr = this.placements.find(item => item.id === 'home_header_below');
+    if (pTopHdr) {
+      pTopHdr.enabled = false;
+    }
     setPlacementCode('home_banner_below', AD_CODE_468X60, '468x60 Banner');
     setPlacementCode('home_category_nav_below', AD_CODE_728X90, '728x90 Leaderboard');
     setPlacementCode('home_featured_between', AD_CODE_NATIVE, 'Native Container Banner');

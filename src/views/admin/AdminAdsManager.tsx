@@ -11,7 +11,6 @@ import {
   AdDeviceVisibility,
   AdType
 } from '../../types';
-import { AdBanner } from '../../components/AdBanner';
 import {
   LayoutDashboard,
   Network,
@@ -913,9 +912,28 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onNavigateHome
                     </div>
                   </div>
 
-                  {/* Inline Live Preview Miniature */}
-                  <div className="p-2 bg-slate-100/60 dark:bg-slate-950/60 rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
-                    <AdBanner placementId={p.id} forceShowForPreview={true} />
+                  {/* Safe Blueprint Miniature Preview (Zero Ad Scripts in Admin Panel) */}
+                  <div className="p-3.5 bg-slate-50 dark:bg-slate-900/80 rounded-xl border border-dashed border-slate-300 dark:border-slate-700/80 flex flex-col items-center justify-center text-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Shield className="w-3.5 h-3.5 text-indigo-500" />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {p.dimensions_label || 'Ad Slot Unit'}
+                      </span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-medium ${
+                        p.enabled
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
+                          : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                      }`}>
+                        {p.enabled ? 'Active on Public Site' : 'Disabled'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono max-w-md truncate">
+                      {p.ad_type === 'code' ? (p.code ? p.code.substring(0, 60) + '...' : 'Custom Ad Code') : 'Custom Banner Graphic'}
+                    </p>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      Protected: No ads will display inside Admin Panel
+                    </span>
                   </div>
 
                   <div className="pt-2 flex justify-end">
