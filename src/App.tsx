@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { useRouter } from './lib/router';
 import { Header } from './components/Header';
@@ -10,11 +10,13 @@ import { CategoryView } from './views/CategoryView';
 import { SearchView } from './views/SearchView';
 import { StaticPageView } from './views/StaticPageView';
 import { SEOToolsView } from './views/SEOToolsView';
+import { analyticsService } from './lib/analyticsService';
 
 // Admin Views
 import { AdminLogin } from './views/admin/AdminLogin';
 import { AdminLayout } from './views/admin/AdminLayout';
 import { AdminDashboard } from './views/admin/AdminDashboard';
+import { AdminVisitors } from './views/admin/AdminVisitors';
 import { AdminPosts } from './views/admin/AdminPosts';
 import { AdminPostEditor } from './views/admin/AdminPostEditor';
 import { AdminCategories } from './views/admin/AdminCategories';
@@ -30,6 +32,25 @@ import { AdminSupabase } from './views/admin/AdminSupabase';
 const MainApp: React.FC = () => {
   const { route, navigate } = useRouter();
   const { language, isAdminAuthenticated } = useApp();
+
+  // Track real visitor pageviews on public content routes (exclude admin & SEO endpoints)
+  useEffect(() => {
+    if (
+      route.view !== 'admin' &&
+      route.view !== 'sitemap' &&
+      route.view !== 'robots' &&
+      route.view !== 'rss'
+    ) {
+      const timer = setTimeout(() => {
+        analyticsService.trackPageView(
+          route.rawPath || '/',
+          document.title || 'DigiSeekho',
+          route.language || 'en'
+        );
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [route.rawPath, route.view, route.language]);
 
   // Special SEO Directives Endpoints
   if (route.view === 'sitemap') {
@@ -78,6 +99,9 @@ const MainApp: React.FC = () => {
             }}
             onNavigateHome={() => navigate('/')}
           />
+        )}
+        {currentSection === 'visitors' && (
+          <AdminVisitors onNavigateHome={() => navigate('/')} />
         )}
         {currentSection === 'posts' && (
           <AdminPosts

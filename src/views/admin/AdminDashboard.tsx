@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { dataService } from '../../lib/dataService';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { analyticsService, AnalyticsSummary } from '../../lib/analyticsService';
 import { 
   FileText, 
   Clock, 
@@ -13,7 +14,13 @@ import {
   CheckCircle2, 
   AlertCircle,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
+  Users,
+  Calendar,
+  Activity,
+  BarChart3,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -28,6 +35,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSelectSection,
   const comments = dataService.getComments();
   const settings = dataService.getSettings();
   const isSupabaseReady = isSupabaseConfigured();
+
+  const [analytics, setAnalytics] = useState<AnalyticsSummary>(() => analyticsService.getAnalyticsSummary());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAnalytics(analyticsService.getAnalyticsSummary());
+    };
+    window.addEventListener('digiseekho:analytics_update', handleUpdate);
+    const interval = setInterval(() => {
+      setAnalytics(analyticsService.getAnalyticsSummary());
+    }, 10000);
+    return () => {
+      window.removeEventListener('digiseekho:analytics_update', handleUpdate);
+      clearInterval(interval);
+    };
+  }, []);
 
   const publishedCount = posts.filter(p => p.status === 'published').length;
   const draftCount = posts.filter(p => p.status === 'draft').length;
@@ -121,6 +144,135 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSelectSection,
           </div>
         </div>
 
+      </div>
+
+      {/* REAL VISITORS TELEMETRY SECTION (Real human visitors: Total, Daily, Weekly, Monthly) */}
+      <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <span>Real Visitors Telemetry (Live)</span>
+              </h2>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                100% Real • No Fake / Bots
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Authentic browser fingerprinting & unique human visitor tracking (Total, Daily, Weekly & Monthly)
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => analyticsService.exportAnalyticsCSV()}
+              className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            >
+              Export CSV
+            </button>
+            <button
+              onClick={() => onSelectSection('visitors')}
+              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
+            >
+              <span>Full Analytics View</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Core Metrics: Total, Daily, Weekly, Monthly */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* 1. Total Visitors */}
+          <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400/50 transition-colors">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Visitors</span>
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {analytics.totalVisitors.toLocaleString()}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+              <span>All-time unique users</span>
+              <span className="font-mono text-slate-600 dark:text-slate-300 font-semibold">{analytics.totalPageviews} views</span>
+            </div>
+          </div>
+
+          {/* 2. Daily Visitors (Today) */}
+          <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-400/50 transition-colors">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Daily (Today)</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <Calendar className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {analytics.dailyVisitors.toLocaleString()}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+              <span>{analytics.dailyPageviews} views today</span>
+              <span className="text-[10px] font-mono text-slate-400">vs {analytics.yesterdayVisitors} y'day</span>
+            </div>
+          </div>
+
+          {/* 3. Weekly Visitors (Last 7 Days) */}
+          <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/50 transition-colors">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Weekly (7 Days)</span>
+              <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {analytics.weeklyVisitors.toLocaleString()}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+              <span>Rolling 7-day unique</span>
+              <span className="font-mono text-slate-600 dark:text-slate-300 font-semibold">{analytics.weeklyPageviews} views</span>
+            </div>
+          </div>
+
+          {/* 4. Monthly Visitors (Last 30 Days) */}
+          <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 hover:border-purple-400/50 transition-colors">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Monthly (30 Days)</span>
+              <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <BarChart3 className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {analytics.monthlyVisitors.toLocaleString()}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+              <span>Rolling 30-day unique</span>
+              <span className="font-mono text-slate-600 dark:text-slate-300 font-semibold">{analytics.monthlyPageviews} views</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Live Status and Device Breakdown Footnote */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <Activity className="w-3.5 h-3.5 text-emerald-500" />
+              <strong>{analytics.activeNow}</strong> active visitor{analytics.activeNow === 1 ? '' : 's'} right now
+            </span>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <span className="text-slate-500 dark:text-slate-400">
+              Desktop: {analytics.deviceBreakdown.find(d => d.device === 'desktop')?.percentage || 0}% | Mobile: {analytics.deviceBreakdown.find(d => d.device === 'mobile')?.percentage || 0}%
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Admin sessions automatically excluded from counts</span>
+          </div>
+        </div>
       </div>
 
       {/* Infrastructure Status Banner */}

@@ -22,7 +22,8 @@ import {
   Shield,
   Layers,
   Share2,
-  DollarSign
+  DollarSign,
+  Users
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -43,6 +44,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'visitors', label: 'Real Visitors', icon: Users },
     { id: 'posts', label: 'All Posts', icon: FileText },
     { id: 'new-post', label: 'Add New Post', icon: PlusCircle },
     { id: 'categories', label: 'Categories', icon: FolderTree },
