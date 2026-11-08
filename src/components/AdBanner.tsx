@@ -80,22 +80,6 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     Boolean(document.querySelector('[data-admin-panel="true"]'))
   );
 
-  // Native container script loader
-  useEffect(() => {
-    if (isAdminRoute) return;
-    if (isNativeContainerCode) {
-      const scriptSrc = 'https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448';
-      let existing = document.querySelector(`script[src="${scriptSrc}"]`) as HTMLScriptElement | null;
-      if (!existing) {
-        existing = document.createElement('script');
-        existing.src = scriptSrc;
-        existing.async = true;
-        existing.setAttribute('data-cfasync', 'false');
-        document.head.appendChild(existing);
-      }
-    }
-  }, [isNativeContainerCode, isAdminRoute]);
-
   // Code embed injection effect for standard codes
   useEffect(() => {
     if (isAdminRoute) return;
@@ -261,9 +245,16 @@ export const AdBanner: React.FC<AdBannerProps> = ({
             })()}
           </div>
         ) : isNativeContainerCode ? (
-          /* Bauval.org Native Container Unit */
-          <div className="w-full flex items-center justify-center py-2 overflow-hidden">
-            <div id="container-ae6aed7d96190fde7b38946cb1caf448" className="w-full min-h-[90px] flex items-center justify-center" />
+          /* Bauval.org Native Container Unit inside responsive iframe to prevent duplicate DOM ID collisions and re-render on all posts */
+          <div className="w-full flex items-center justify-center py-1.5 overflow-hidden">
+            <iframe
+              srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>html,body{margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;overflow:hidden;width:100%;min-height:90px;}</style></head><body><script async data-cfasync="false" src="https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448"></script><div id="container-ae6aed7d96190fde7b38946cb1caf448"></div></body></html>`}
+              title="Native Advertisement Unit"
+              width="100%"
+              style={{ maxWidth: '100%', minHeight: '110px', border: 0 }}
+              className="border-0 overflow-hidden mx-auto w-full"
+              scrolling="no"
+            />
           </div>
         ) : (
           /* Network code / Google AdSense embed */

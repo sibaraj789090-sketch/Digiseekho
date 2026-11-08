@@ -142,9 +142,21 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
     });
   }, [translation.content]);
 
-  // Split content by </p> for dynamic in-article ad injection
+  // Split content by </p> or newlines for dynamic in-article ad injection on all posts
   const contentParagraphs = useMemo(() => {
-    const parts = processedContent.split(/(<\/p>)/i);
+    const raw = processedContent.trim();
+    if (!raw) return [];
+
+    // If content does not have explicit </p> tags, split by double newlines
+    if (!raw.toLowerCase().includes('</p>')) {
+      return raw
+        .split(/\n\s*\n/)
+        .map(seg => seg.trim())
+        .filter(Boolean)
+        .map(seg => `<p>${seg}</p>`);
+    }
+
+    const parts = raw.split(/(<\/p>)/i);
     const paragraphs: string[] = [];
     for (let i = 0; i < parts.length; i += 2) {
       const fullP = (parts[i] || '') + (parts[i + 1] || '');
@@ -391,38 +403,39 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
             >
               {contentParagraphs.length > 0 ? (
                 contentParagraphs.map((paraHtml, pIdx) => {
+                  const total = contentParagraphs.length;
                   const isFirstPara = pIdx === 0;
-                  const isThirdPara = pIdx === 2;
-                  const isMidPara = pIdx === Math.floor(contentParagraphs.length / 2);
-                  const isBeforeConclusion = pIdx === contentParagraphs.length - 2;
+                  const isThirdPara = pIdx === 2 && total > 3;
+                  const isMidPara = pIdx === Math.floor(total / 2) && pIdx !== 0 && pIdx !== total - 1;
+                  const isBeforeConclusion = pIdx === total - 2 && pIdx > 1;
 
                   return (
                     <React.Fragment key={pIdx}>
                       <div dangerouslySetInnerHTML={{ __html: paraHtml }} />
 
-                      {/* After First Paragraph Ad */}
+                      {/* After First Paragraph Ad (Always shows on every blog post) */}
                       {isFirstPara && (
                         <div className="my-6 not-prose">
                           <AdBanner placementId="article_para_1" onNavigate={onNavigate} />
                         </div>
                       )}
 
-                      {/* After Third Paragraph Ad */}
-                      {isThirdPara && (
-                        <div className="my-6 not-prose">
-                          <AdBanner placementId="article_para_3" onNavigate={onNavigate} />
-                        </div>
-                      )}
-
                       {/* Middle of Article Content Ad */}
-                      {isMidPara && pIdx > 2 && (
+                      {isMidPara && (
                         <div className="my-6 not-prose">
                           <AdBanner placementId="article_mid_content" onNavigate={onNavigate} />
                         </div>
                       )}
 
+                      {/* After Third Paragraph Ad */}
+                      {isThirdPara && !isMidPara && (
+                        <div className="my-6 not-prose">
+                          <AdBanner placementId="article_para_3" onNavigate={onNavigate} />
+                        </div>
+                      )}
+
                       {/* Before Conclusion Ad */}
-                      {isBeforeConclusion && pIdx > 3 && (
+                      {isBeforeConclusion && !isMidPara && (
                         <div className="my-6 not-prose">
                           <AdBanner placementId="article_before_conclusion" onNavigate={onNavigate} />
                         </div>
@@ -431,7 +444,12 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
                   );
                 })
               ) : (
-                <div dangerouslySetInnerHTML={{ __html: processedContent }} />
+                <>
+                  <div dangerouslySetInnerHTML={{ __html: processedContent }} />
+                  <div className="my-6 not-prose">
+                    <AdBanner placementId="article_mid_content" onNavigate={onNavigate} />
+                  </div>
+                </>
               )}
             </div>
 
