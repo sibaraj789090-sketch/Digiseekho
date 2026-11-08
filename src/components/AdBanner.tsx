@@ -61,19 +61,68 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     };
   }, [effectiveId]);
 
-  // Code embed injection effect
+  const isAtOptionsCode = Boolean(
+    placement &&
+    placement.ad_type === 'code' &&
+    (placement.code?.includes('atOptions') || placement.code?.includes('bauval.org/22'))
+  );
+
+  const isNativeContainerCode = Boolean(
+    placement &&
+    placement.ad_type === 'code' &&
+    (placement.code?.includes('container-ae6aed7d96190fde7b38946cb1caf448') || placement.code?.includes('bauval.org/21'))
+  );
+
+  // Native container script loader
   useEffect(() => {
-    if (placement && placement.ad_type === 'code' && placement.code && codeContainerRef.current) {
+    if (isNativeContainerCode) {
+      const scriptSrc = 'https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448';
+      let existing = document.querySelector(`script[src="${scriptSrc}"]`) as HTMLScriptElement | null;
+      if (!existing) {
+        existing = document.createElement('script');
+        existing.src = scriptSrc;
+        existing.async = true;
+        existing.setAttribute('data-cfasync', 'false');
+        document.head.appendChild(existing);
+      }
+    }
+  }, [isNativeContainerCode]);
+
+  // Code embed injection effect for standard codes
+  useEffect(() => {
+    if (
+      placement &&
+      placement.ad_type === 'code' &&
+      placement.code &&
+      !isAtOptionsCode &&
+      !isNativeContainerCode &&
+      codeContainerRef.current
+    ) {
       codeContainerRef.current.innerHTML = '';
       try {
+        const container = codeContainerRef.current;
         const range = document.createRange();
         const documentFragment = range.createContextualFragment(placement.code);
-        codeContainerRef.current.appendChild(documentFragment);
+
+        // Re-create scripts for reliable execution
+        const scripts = documentFragment.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+          const newScript = document.createElement('script');
+          Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = oldScript.textContent;
+          }
+          oldScript.parentNode?.replaceChild(newScript, oldScript);
+        });
+
+        container.appendChild(documentFragment);
       } catch (err) {
         console.warn('Ad code rendering notice:', err);
       }
     }
-  }, [placement?.code, placement?.ad_type]);
+  }, [placement?.code, placement?.ad_type, isAtOptionsCode, isNativeContainerCode]);
 
   // Record real impression once when mounted and visible
   useEffect(() => {
@@ -182,6 +231,30 @@ export const AdBanner: React.FC<AdBannerProps> = ({
               </p>
             </div>
           )
+        ) : isAtOptionsCode ? (
+          /* Dynamic AtOptions iframe (160x600, 468x60, etc.) */
+          <div className="w-full flex items-center justify-center py-1.5 overflow-hidden">
+            {(() => {
+              const atWidth = placement.code?.match(/['"]width['"]\s*:\s*(\d+)/)?.[1] || '468';
+              const atHeight = placement.code?.match(/['"]height['"]\s*:\s*(\d+)/)?.[1] || '60';
+              return (
+                <iframe
+                  srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>html,body{margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;overflow:hidden;width:100%;height:100%;}</style></head><body>${placement.code}</body></html>`}
+                  title={`Advertisement Banner ${atWidth}x${atHeight}`}
+                  width={atWidth}
+                  height={atHeight}
+                  style={{ maxWidth: '100%', minHeight: `${atHeight}px` }}
+                  className="border-0 overflow-hidden mx-auto"
+                  scrolling="no"
+                />
+              );
+            })()}
+          </div>
+        ) : isNativeContainerCode ? (
+          /* Bauval.org Native Container Unit */
+          <div className="w-full flex items-center justify-center py-2 overflow-hidden">
+            <div id="container-ae6aed7d96190fde7b38946cb1caf448" className="w-full min-h-[90px] flex items-center justify-center" />
+          </div>
         ) : (
           /* Network code / Google AdSense embed */
           <div

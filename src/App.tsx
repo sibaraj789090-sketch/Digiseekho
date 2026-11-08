@@ -4,6 +4,7 @@ import { useRouter } from './lib/router';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SearchModal } from './components/SearchModal';
+import { FloatingSkyscraper } from './components/FloatingSkyscraper';
 import { HomeView } from './views/HomeView';
 import { ArticleView } from './views/ArticleView';
 import { CategoryView } from './views/CategoryView';
@@ -204,6 +205,7 @@ const MainApp: React.FC = () => {
 
       <Footer onNavigate={navigate} />
       <SearchModal onNavigate={navigate} />
+      <FloatingSkyscraper onNavigate={navigate} />
     </div>
   );
 };

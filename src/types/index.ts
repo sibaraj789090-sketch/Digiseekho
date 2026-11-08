@@ -177,7 +177,7 @@ export interface AdUnit {
   id: string;
   name: string;
   network_id: string;
-  format: 'leaderboard' | 'rectangle' | 'billboard' | 'mobile_banner' | 'in_article' | 'responsive';
+  format: 'leaderboard' | 'rectangle' | 'billboard' | 'mobile_banner' | 'in_article' | 'responsive' | 'skyscraper' | 'popunder' | 'social_bar';
   code: string;
   notes?: string;
   created_at: string;

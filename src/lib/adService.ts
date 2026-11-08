@@ -62,14 +62,36 @@ export const INITIAL_NETWORKS: AdNetwork[] = [
     id: 'hilltopads',
     name: 'HilltopAds',
     slug: 'hilltopads',
-    publisher_id: 'hta-77291',
-    header_code: '<!-- HilltopAds Safe Direct Header Tag -->',
-    default_ad_code: '<div id="hta-display-banner" data-hta-id="77291"></div>',
+    publisher_id: 'shameful-farm',
+    header_code: `<script>
+(function(myo){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = myo || {};
+s.src = "\\/\\/shameful-farm.com\\/buXdVZs.dyGRlb0zYSWrcy\\/De\\/mE9_uxZfUWlgk\\/PeTgcb2\\/M\\/DqEl4\\/OlDWUFtdNNzbY\\/w\\/MNTWgz4\\/O\\/QS";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>`,
+    default_ad_code: `<script>
+(function(myo){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = myo || {};
+s.src = "\\/\\/shameful-farm.com\\/buXdVZs.dyGRlb0zYSWrcy\\/De\\/mE9_uxZfUWlgk\\/PeTgcb2\\/M\\/DqEl4\\/OlDWUFtdNNzbY\\/w\\/MNTWgz4\\/O\\/QS";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>`,
     website_url: 'https://hilltopads.com',
-    enabled: false,
+    enabled: true,
     is_custom: false,
     created_at: '2026-01-01T00:00:00Z',
-    updated_at: '2026-11-07T03:00:00Z'
+    updated_at: '2026-11-07T20:12:00Z'
   },
   {
     id: 'monetag',
@@ -99,6 +121,47 @@ export const INITIAL_NETWORKS: AdNetwork[] = [
   }
 ];
 
+// User-provided ad codes
+export const AD_CODE_728X90 = `<script>
+  atOptions = {
+    'key' : '975452282869e85e3ecb0ce9c0481ad8',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/975452282869e85e3ecb0ce9c0481ad8"></script>`;
+
+export const AD_CODE_468X60 = `<script>
+  atOptions = {
+    'key' : '66fb27c1b80bb8362f0f63df6e6892c2',
+    'format' : 'iframe',
+    'height' : 60,
+    'width' : 468,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/66fb27c1b80bb8362f0f63df6e6892c2"></script>`;
+
+export const AD_CODE_160X600 = `<script>
+  atOptions = {
+    'key' : '0f4ff4bcb4fc84c6c62fa7b4b248e378',
+    'format' : 'iframe',
+    'height' : 600,
+    'width' : 160,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/0f4ff4bcb4fc84c6c62fa7b4b248e378"></script>`;
+
+export const AD_CODE_NATIVE = `<script async="async" data-cfasync="false" src="https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448"></script>
+<div id="container-ae6aed7d96190fde7b38946cb1caf448"></div>`;
+
+export const AD_CODE_POPUNDER = `<script data-cfasync="false" src="https://abscloud.org/1/0f311620061c320582c5f48edb2b8ab7"></script>`;
+
+export const AD_CODE_SOCIALBAR = `<script data-cfasync="false" src="https://bauval.org/14/38962adaf86e4b9a1a55372f26cec354"></script>`;
+
 // Initial Placements across Homepage, Article, Sidebar, Mobile, Desktop
 export const INITIAL_PLACEMENTS: AdPlacement[] = [
   // --- HOMEPAGE PLACEMENTS ---
@@ -107,51 +170,45 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     name: 'Homepage: Below Header',
     group: 'homepage',
     description: 'Prominent 728x90 Leaderboard directly below the top website header and navigation.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&h=180&q=80',
-    link_url: '/category/ai-tools',
-    alt_text: 'DigiSeekho AI & Cloud Learning Hub',
-    open_in_new_tab: false,
-    device_visibility: 'desktop_only',
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_728X90,
+    open_in_new_tab: true,
+    device_visibility: 'all',
     display_order: 1,
     dimensions_label: '728x90 Leaderboard',
-    updated_at: '2026-11-07T03:00:00Z'
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'home_banner_below',
     name: 'Homepage: Below Banner',
     group: 'homepage',
     description: 'Appears directly beneath the DigiSeekho Hero Banner, above category shortcuts.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&h=180&q=80',
-    link_url: '/category/technology',
-    alt_text: 'Software Dev Architecture & AI Masterclass',
-    open_in_new_tab: false,
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_468X60,
+    open_in_new_tab: true,
     device_visibility: 'all',
     display_order: 2,
-    dimensions_label: '728x90 / 970x120 Banner',
-    updated_at: '2026-11-07T03:00:00Z'
+    dimensions_label: '468x60 Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'home_category_nav_below',
     name: 'Homepage: Below Category Navigation',
     group: 'homepage',
     description: 'Directly below the 5 Category Navigation Shortcuts, above Featured Editorial.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&h=200&q=80',
-    link_url: '/category/blogging-seo',
-    alt_text: 'Google SEO Strategies & Web Monetization',
-    open_in_new_tab: false,
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_728X90,
+    open_in_new_tab: true,
     device_visibility: 'all',
     display_order: 3,
-    dimensions_label: '728x90 / Responsive',
-    updated_at: '2026-11-07T03:00:00Z'
+    dimensions_label: '728x90 Leaderboard',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'home_featured_between',
@@ -160,15 +217,13 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     description: 'Separates the hero featured editorial post from the Trending Guides section.',
     enabled: true,
     network_id: 'custom',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&h=220&q=80',
-    link_url: '/category/ai-tools',
-    alt_text: 'Discover Next-Gen Prompt Engineering Workflows',
-    open_in_new_tab: false,
+    ad_type: 'code',
+    code: AD_CODE_NATIVE,
+    open_in_new_tab: true,
     device_visibility: 'all',
     display_order: 4,
-    dimensions_label: '970x120 or 728x90 Responsive In-Feed',
-    updated_at: '2026-11-07T03:00:00Z'
+    dimensions_label: 'Native Container Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'home_cards_between',
@@ -176,16 +231,14 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     group: 'homepage',
     description: 'Native responsive ad placed within the Latest Articles card grid.',
     enabled: true,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=1000&h=200&q=80',
-    link_url: '/category/digital-skills',
-    alt_text: 'Learn High-Income Tech Skills in 2026',
-    open_in_new_tab: false,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_468X60,
+    open_in_new_tab: true,
     device_visibility: 'all',
     display_order: 5,
-    dimensions_label: '728x90 / Native Feed Card',
-    updated_at: '2026-11-07T03:00:00Z'
+    dimensions_label: '468x60 Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'home_newsletter_above',
@@ -194,68 +247,75 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     description: 'High CTR wide billboard directly preceding the newsletter / subscribe card.',
     enabled: true,
     network_id: 'custom',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=260&q=80',
-    link_url: 'https://digiseekho.com',
-    alt_text: 'DigiSeekho Pro Technology Masterclass - Enroll Free',
+    ad_type: 'code',
+    code: AD_CODE_728X90,
     open_in_new_tab: true,
     device_visibility: 'all',
     display_order: 6,
-    dimensions_label: '970x250 Billboard / Responsive',
-    updated_at: '2026-11-07T03:00:00Z'
+    dimensions_label: '728x90 Leaderboard',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'home_footer',
     name: 'Homepage: Footer Advertisement',
     group: 'homepage',
     description: 'Final banner position directly before the footer copyright strip.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&h=180&q=80',
-    link_url: 'https://digiseekho.com',
-    alt_text: 'DigiSeekho Global Technology News',
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_728X90,
     open_in_new_tab: true,
-    device_visibility: 'desktop_only',
+    device_visibility: 'all',
     display_order: 7,
     dimensions_label: '728x90 Footer Leaderboard',
-    updated_at: '2026-11-07T03:00:00Z'
+    updated_at: '2026-11-08T02:22:00Z'
   },
 
   // --- ARTICLE PAGE PLACEMENTS ---
+  {
+    id: 'article_top',
+    name: 'Article: Top Header Banner',
+    group: 'article',
+    description: 'Leaderboard banner at the very top of the article reading page.',
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_728X90,
+    open_in_new_tab: true,
+    device_visibility: 'all',
+    display_order: 8,
+    dimensions_label: '728x90 Leaderboard',
+    updated_at: '2026-11-08T02:22:00Z'
+  },
   {
     id: 'article_title_below',
     name: 'Article: Below Article Title',
     group: 'article',
     description: 'Header ad right after the headline and metadata deck.',
     enabled: true,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=1000&h=180&q=80',
-    link_url: '/category/technology',
-    alt_text: 'Enterprise Cloud & AI Architecture Tools',
-    open_in_new_tab: false,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_468X60,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 8,
-    dimensions_label: '728x90 / Responsive Top Banner',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 9,
+    dimensions_label: '468x60 Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_image_below',
     name: 'Article: Below Featured Image',
     group: 'article',
     description: 'Placed immediately below the post cover hero graphic.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&h=180&q=80',
-    link_url: '/category/ai-tools',
-    alt_text: 'Curated Artificial Intelligence Tool Directory',
-    open_in_new_tab: false,
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_NATIVE,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 9,
-    dimensions_label: '728x90 Banner',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 10,
+    dimensions_label: 'Native Container Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_para_1',
@@ -263,33 +323,29 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     group: 'article',
     description: 'Early in-reading hook. Captures initial visitor attention as they begin reading.',
     enabled: true,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&h=260&q=80',
-    link_url: '/category/blogging-seo',
-    alt_text: 'Google Organic Ranking & SEO Guide',
-    open_in_new_tab: false,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_468X60,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 10,
-    dimensions_label: '336x280 Large Rectangle / In-Article',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 11,
+    dimensions_label: '468x60 Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_para_3',
     name: 'Article: After Third Paragraph',
     group: 'article',
-    description: 'Inserted after the 3rd paragraph. Ideal spot for AdSense in-article responsive units.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&h=260&q=80',
-    link_url: '/category/technology',
-    alt_text: 'Tech Tools & Frameworks',
-    open_in_new_tab: false,
+    description: 'Inserted after the 3rd paragraph. Ideal spot for responsive banner units.',
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_468X60,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 11,
-    dimensions_label: 'In-Article Fluid / 300x250',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 12,
+    dimensions_label: '468x60 Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_mid_content',
@@ -298,32 +354,28 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     description: 'Automatically placed at the halfway mark of the article text for highest time-on-page CTR.',
     enabled: true,
     network_id: 'custom',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&h=280&q=80',
-    link_url: '/category/digital-skills',
-    alt_text: 'Upgrade Digital & Coding Skills',
-    open_in_new_tab: false,
+    ad_type: 'code',
+    code: AD_CODE_NATIVE,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 12,
-    dimensions_label: '336x280 / Responsive Content Ad',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 13,
+    dimensions_label: 'Native Container Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_before_conclusion',
     name: 'Article: Before Conclusion',
     group: 'article',
     description: 'Appears directly before the final takeaways or concluding heading.',
-    enabled: false,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=800&h=240&q=80',
-    link_url: '/category/ai-tools',
-    alt_text: 'Top Generative AI Applications',
-    open_in_new_tab: false,
+    enabled: true,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_468X60,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 13,
-    dimensions_label: '300x250 or 728x90',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 14,
+    dimensions_label: '468x60 Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_after_content',
@@ -332,15 +384,13 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     description: 'At the end of prose text, directly before author bio, tags, and comments.',
     enabled: true,
     network_id: 'custom',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&h=220&q=80',
-    link_url: 'https://digiseekho.com',
-    alt_text: 'Stay Connected with DigiSeekho Insights',
+    ad_type: 'code',
+    code: AD_CODE_728X90,
     open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 14,
-    dimensions_label: '728x90 Responsive Banner',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 15,
+    dimensions_label: '728x90 Leaderboard',
+    updated_at: '2026-11-08T02:22:00Z'
   },
   {
     id: 'article_related_section',
@@ -348,16 +398,14 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     group: 'article',
     description: 'Directly above the 3-column Related Articles grid at the bottom of the page.',
     enabled: true,
-    network_id: 'adsense',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1000&h=180&q=80',
-    link_url: '/category/technology',
-    alt_text: 'Recommended Technology Stacks & Tools',
-    open_in_new_tab: false,
+    network_id: 'custom',
+    ad_type: 'code',
+    code: AD_CODE_NATIVE,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 15,
-    dimensions_label: '728x90 / Matched Content',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 16,
+    dimensions_label: 'Native Container Banner',
+    updated_at: '2026-11-08T02:22:00Z'
   },
 
   // --- SIDEBAR PLACEMENT ---
@@ -365,18 +413,16 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     id: 'article_sidebar',
     name: 'Sidebar: Desktop Sticky Sidebar Unit',
     group: 'sidebar',
-    description: 'Sticky 300x250 Medium Rectangle or 300x600 Half-Page banner in desktop right rail.',
+    description: 'Sticky 160x600 Wide Skyscraper banner in desktop right rail.',
     enabled: true,
     network_id: 'custom',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&h=300&q=80',
-    link_url: '/category/ai-tools',
-    alt_text: 'DigiSeekho AI & Cloud Pro Certifications',
-    open_in_new_tab: false,
-    device_visibility: 'desktop_only',
-    display_order: 16,
-    dimensions_label: '300x250 Medium Rectangle',
-    updated_at: '2026-11-07T03:00:00Z'
+    ad_type: 'code',
+    code: AD_CODE_160X600,
+    open_in_new_tab: true,
+    device_visibility: 'all',
+    display_order: 17,
+    dimensions_label: '160x600 Wide Skyscraper',
+    updated_at: '2026-11-08T02:22:00Z'
   },
 
   // --- GENERAL ARCHIVES ---
@@ -387,15 +433,13 @@ export const INITIAL_PLACEMENTS: AdPlacement[] = [
     description: 'Displayed at the top of category archives and search results.',
     enabled: true,
     network_id: 'custom',
-    ad_type: 'custom_banner',
-    desktop_image_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&h=200&q=80',
-    link_url: '/category/technology',
-    alt_text: 'Top Rated Tools for Tech Creators & Bloggers',
-    open_in_new_tab: false,
+    ad_type: 'code',
+    code: AD_CODE_728X90,
+    open_in_new_tab: true,
     device_visibility: 'all',
-    display_order: 17,
-    dimensions_label: '728x90 Leaderboard / Responsive',
-    updated_at: '2026-11-07T03:00:00Z'
+    display_order: 18,
+    dimensions_label: '728x90 Leaderboard',
+    updated_at: '2026-11-08T02:22:00Z'
   }
 ];
 
@@ -436,6 +480,128 @@ export const INITIAL_AD_UNITS: AdUnit[] = [
     code: '<div class="adsterra-unit" style="min-height:90px;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;color:#888;">[Adsterra Network 728x90 Unit]</span></div>',
     notes: 'Secondary monetization network',
     created_at: '2026-01-01T00:00:00Z'
+  },
+  {
+    id: 'unit-hilltopads-banner',
+    name: 'HilltopAds Site-wide Banner Code',
+    network_id: 'hilltopads',
+    format: 'leaderboard',
+    code: `<script>
+(function(myo){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = myo || {};
+s.src = "\\/\\/shameful-farm.com\\/buXdVZs.dyGRlb0zYSWrcy\\/De\\/mE9_uxZfUWlgk\\/PeTgcb2\\/M\\/DqEl4\\/OlDWUFtdNNzbY\\/w\\/MNTWgz4\\/O\\/QS";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>`,
+    notes: 'Official HilltopAds banner tag configured for site-wide monetization',
+    created_at: '2026-11-07T20:12:00Z'
+  },
+  {
+    id: 'unit-hilltopads-multitag',
+    name: 'HilltopAds MultiTag In-Page Ad Code',
+    network_id: 'hilltopads',
+    format: 'in_article',
+    code: `<script>
+(function(wtb){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = wtb || {};
+s.src = "\\/\\/shameful-farm.com\\/b.XYVys\\/dSGTlQ0-Y\\/WNc_\\/yebmY9GunZgUal\\/kZPtTgcP2HMyD\\/EL4pNRj\\/EEtbNbzFY\\/wYM\\/TCgQ2\\/NxQ_";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>`,
+    notes: 'Official HilltopAds multi-tag script for site-wide in-page monetization',
+    created_at: '2026-11-08T02:07:00Z'
+  },
+  {
+    id: 'unit-leaderboard-728x90',
+    name: '728x90 Leaderboard Banner (bauval.org)',
+    network_id: 'custom',
+    format: 'leaderboard',
+    code: `<script>
+  atOptions = {
+    'key' : '975452282869e85e3ecb0ce9c0481ad8',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/975452282869e85e3ecb0ce9c0481ad8"></script>`,
+    notes: 'Official 728x90 Leaderboard display banner from bauval.org',
+    created_at: '2026-11-08T02:22:00Z'
+  },
+  {
+    id: 'unit-banner-468x60',
+    name: '468x60 Full Banner (bauval.org)',
+    network_id: 'custom',
+    format: 'leaderboard',
+    code: `<script>
+  atOptions = {
+    'key' : '66fb27c1b80bb8362f0f63df6e6892c2',
+    'format' : 'iframe',
+    'height' : 60,
+    'width' : 468,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/66fb27c1b80bb8362f0f63df6e6892c2"></script>`,
+    notes: 'Official 468x60 Full Banner from bauval.org',
+    created_at: '2026-11-08T02:21:00Z'
+  },
+  {
+    id: 'unit-skyscraper-160x600',
+    name: '160x600 Wide Skyscraper Banner (bauval.org)',
+    network_id: 'custom',
+    format: 'skyscraper',
+    code: `<script>
+  atOptions = {
+    'key' : '0f4ff4bcb4fc84c6c62fa7b4b248e378',
+    'format' : 'iframe',
+    'height' : 600,
+    'width' : 160,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/0f4ff4bcb4fc84c6c62fa7b4b248e378"></script>`,
+    notes: 'Official 160x600 Wide Skyscraper sidebar unit from bauval.org',
+    created_at: '2026-11-08T02:18:00Z'
+  },
+  {
+    id: 'unit-native-container',
+    name: 'Native Container Display Ad (bauval.org)',
+    network_id: 'custom',
+    format: 'in_article',
+    code: `<script async="async" data-cfasync="false" src="https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448"></script>
+<div id="container-ae6aed7d96190fde7b38946cb1caf448"></div>`,
+    notes: 'Official responsive Native Container in-feed display unit from bauval.org',
+    created_at: '2026-11-08T02:20:00Z'
+  },
+  {
+    id: 'unit-popunder-abscloud',
+    name: 'Site-wide Popunder Script (abscloud.org)',
+    network_id: 'custom',
+    format: 'popunder',
+    code: `<script data-cfasync="false" src="https://abscloud.org/1/0f311620061c320582c5f48edb2b8ab7"></script>`,
+    notes: 'Official site-wide popunder ad script from abscloud.org',
+    created_at: '2026-11-08T02:20:00Z'
+  },
+  {
+    id: 'unit-socialbar-bauval',
+    name: 'Social Bar Interactive Ad (bauval.org)',
+    network_id: 'custom',
+    format: 'social_bar',
+    code: `<script data-cfasync="false" src="https://bauval.org/14/38962adaf86e4b9a1a55372f26cec354"></script>`,
+    notes: 'Official interactive Social Bar floating notification ad tag from bauval.org',
+    created_at: '2026-11-08T02:24:00Z'
   }
 ];
 
@@ -452,11 +618,11 @@ export const INITIAL_AD_SETTINGS: AdSystemSettings = {
     adsense: true,
     adsterra: true,
     infolinks: false,
-    hilltopads: false,
+    hilltopads: true,
     monetag: false,
     custom: true
   },
-  updated_at: '2026-11-07T03:00:00Z'
+  updated_at: '2026-11-07T20:12:00Z'
 };
 
 // Seed sample real analytics events (last 48 hours)
@@ -502,6 +668,228 @@ class AdService {
     this.units = loadStored(AD_STORAGE_KEYS.UNITS, INITIAL_AD_UNITS);
     this.settings = loadStored(AD_STORAGE_KEYS.SETTINGS, INITIAL_AD_SETTINGS);
     this.events = loadStored(AD_STORAGE_KEYS.EVENTS, INITIAL_AD_EVENTS);
+
+    // Auto-migrate HilltopAds official banner scripts
+    const htaCode1 = `<script>
+(function(myo){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = myo || {};
+s.src = "\\/\\/shameful-farm.com\\/buXdVZs.dyGRlb0zYSWrcy\\/De\\/mE9_uxZfUWlgk\\/PeTgcb2\\/M\\/DqEl4\\/OlDWUFtdNNzbY\\/w\\/MNTWgz4\\/O\\/QS";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>`;
+
+    const htaCode2 = `<script>
+(function(wtb){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = wtb || {};
+s.src = "\\/\\/shameful-farm.com\\/b.XYVys\\/dSGTlQ0-Y\\/WNc_\\/yebmY9GunZgUal\\/kZPtTgcP2HMyD\\/EL4pNRj\\/EEtbNbzFY\\/wYM\\/TCgQ2\\/NxQ_";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>`;
+
+    const htaNet = this.networks.find(n => n.id === 'hilltopads');
+    if (htaNet) {
+      htaNet.enabled = true;
+      htaNet.header_code = `${htaCode1}\n\n${htaCode2}`;
+      htaNet.default_ad_code = htaCode2;
+      htaNet.publisher_id = 'shameful-farm';
+    }
+    if (this.settings.network_toggles) {
+      this.settings.network_toggles.hilltopads = true;
+    }
+    if (!this.units.some(u => u.id === 'unit-hilltopads-banner')) {
+      this.units.unshift({
+        id: 'unit-hilltopads-banner',
+        name: 'HilltopAds Site-wide Banner Code',
+        network_id: 'hilltopads',
+        format: 'leaderboard',
+        code: htaCode1,
+        notes: 'Official HilltopAds banner tag configured for site-wide monetization',
+        created_at: new Date().toISOString()
+      });
+    }
+    if (!this.units.some(u => u.id === 'unit-hilltopads-multitag')) {
+      this.units.unshift({
+        id: 'unit-hilltopads-multitag',
+        name: 'HilltopAds MultiTag In-Page Ad Code',
+        network_id: 'hilltopads',
+        format: 'in_article',
+        code: htaCode2,
+        notes: 'Official HilltopAds multi-tag script for site-wide in-page monetization',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    // Auto-migrate Bauval.org and Abscloud ad units
+    const code728x90 = `<script>
+  atOptions = {
+    'key' : '975452282869e85e3ecb0ce9c0481ad8',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/975452282869e85e3ecb0ce9c0481ad8"></script>`;
+
+    const code468x60 = `<script>
+  atOptions = {
+    'key' : '66fb27c1b80bb8362f0f63df6e6892c2',
+    'format' : 'iframe',
+    'height' : 60,
+    'width' : 468,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/66fb27c1b80bb8362f0f63df6e6892c2"></script>`;
+
+    const code160x600 = `<script>
+  atOptions = {
+    'key' : '0f4ff4bcb4fc84c6c62fa7b4b248e378',
+    'format' : 'iframe',
+    'height' : 600,
+    'width' : 160,
+    'params' : {}
+  };
+</script>
+<script src="https://bauval.org/22/0f4ff4bcb4fc84c6c62fa7b4b248e378"></script>`;
+
+    const codeNativeContainer = `<script async="async" data-cfasync="false" src="https://bauval.org/21/ae6aed7d96190fde7b38946cb1caf448"></script>
+<div id="container-ae6aed7d96190fde7b38946cb1caf448"></div>`;
+
+    const codePopunder = `<script data-cfasync="false" src="https://abscloud.org/1/0f311620061c320582c5f48edb2b8ab7"></script>`;
+
+    if (!this.units.some(u => u.id === 'unit-leaderboard-728x90')) {
+      this.units.unshift({
+        id: 'unit-leaderboard-728x90',
+        name: '728x90 Leaderboard Banner (bauval.org)',
+        network_id: 'custom',
+        format: 'leaderboard',
+        code: code728x90,
+        notes: 'Official 728x90 Leaderboard display banner from bauval.org',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    if (!this.units.some(u => u.id === 'unit-banner-468x60')) {
+      this.units.unshift({
+        id: 'unit-banner-468x60',
+        name: '468x60 Full Banner (bauval.org)',
+        network_id: 'custom',
+        format: 'leaderboard',
+        code: code468x60,
+        notes: 'Official 468x60 Full Banner from bauval.org',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    if (!this.units.some(u => u.id === 'unit-skyscraper-160x600')) {
+      this.units.unshift({
+        id: 'unit-skyscraper-160x600',
+        name: '160x600 Wide Skyscraper Banner (bauval.org)',
+        network_id: 'custom',
+        format: 'skyscraper',
+        code: code160x600,
+        notes: 'Official 160x600 Wide Skyscraper sidebar unit from bauval.org',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    if (!this.units.some(u => u.id === 'unit-native-container')) {
+      this.units.unshift({
+        id: 'unit-native-container',
+        name: 'Native Container Display Ad (bauval.org)',
+        network_id: 'custom',
+        format: 'in_article',
+        code: codeNativeContainer,
+        notes: 'Official responsive Native Container in-feed display unit from bauval.org',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    if (!this.units.some(u => u.id === 'unit-popunder-abscloud')) {
+      this.units.unshift({
+        id: 'unit-popunder-abscloud',
+        name: 'Site-wide Popunder Script (abscloud.org)',
+        network_id: 'custom',
+        format: 'popunder',
+        code: codePopunder,
+        notes: 'Official site-wide popunder ad script from abscloud.org',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    const codeSocialBar = `<script data-cfasync="false" src="https://bauval.org/14/38962adaf86e4b9a1a55372f26cec354"></script>`;
+
+    if (!this.units.some(u => u.id === 'unit-socialbar-bauval')) {
+      this.units.unshift({
+        id: 'unit-socialbar-bauval',
+        name: 'Social Bar Interactive Ad (bauval.org)',
+        network_id: 'custom',
+        format: 'social_bar',
+        code: codeSocialBar,
+        notes: 'Official interactive Social Bar floating notification ad tag from bauval.org',
+        created_at: new Date().toISOString()
+      });
+    }
+
+    // Auto-update ALL core placements with real active codes
+    const setPlacementCode = (id: string, code: string, label: string) => {
+      let p = this.placements.find(item => item.id === id);
+      if (!p) {
+        const initial = INITIAL_PLACEMENTS.find(item => item.id === id);
+        if (initial) {
+          p = { ...initial };
+          this.placements.push(p);
+        }
+      }
+      if (p) {
+        p.enabled = true;
+        p.network_id = 'custom';
+        p.ad_type = 'code';
+        p.code = code;
+        p.dimensions_label = label;
+        p.device_visibility = 'all';
+      }
+    };
+
+    // Homepage slots
+    setPlacementCode('home_header_below', AD_CODE_728X90, '728x90 Leaderboard');
+    setPlacementCode('home_banner_below', AD_CODE_468X60, '468x60 Banner');
+    setPlacementCode('home_category_nav_below', AD_CODE_728X90, '728x90 Leaderboard');
+    setPlacementCode('home_featured_between', AD_CODE_NATIVE, 'Native Container Banner');
+    setPlacementCode('home_cards_between', AD_CODE_468X60, '468x60 Banner');
+    setPlacementCode('home_newsletter_above', AD_CODE_728X90, '728x90 Leaderboard');
+    setPlacementCode('home_footer', AD_CODE_728X90, '728x90 Footer Leaderboard');
+
+    // Article slots
+    setPlacementCode('article_top', AD_CODE_728X90, '728x90 Leaderboard');
+    setPlacementCode('article_title_below', AD_CODE_468X60, '468x60 Banner');
+    setPlacementCode('article_image_below', AD_CODE_NATIVE, 'Native Container Banner');
+    setPlacementCode('article_para_1', AD_CODE_468X60, '468x60 Banner');
+    setPlacementCode('article_para_3', AD_CODE_468X60, '468x60 Banner');
+    setPlacementCode('article_mid_content', AD_CODE_NATIVE, 'Native Container Banner');
+    setPlacementCode('article_before_conclusion', AD_CODE_468X60, '468x60 Banner');
+    setPlacementCode('article_after_content', AD_CODE_728X90, '728x90 Leaderboard');
+    setPlacementCode('article_sidebar', AD_CODE_160X600, '160x600 Wide Skyscraper');
+    setPlacementCode('article_related_section', AD_CODE_NATIVE, 'Native Container Banner');
+
+    // Category slot
+    setPlacementCode('category_top', AD_CODE_728X90, '728x90 Leaderboard');
+
+    saveStored(AD_STORAGE_KEYS.NETWORKS, this.networks);
+    saveStored(AD_STORAGE_KEYS.SETTINGS, this.settings);
+    saveStored(AD_STORAGE_KEYS.UNITS, this.units);
+    saveStored(AD_STORAGE_KEYS.PLACEMENTS, this.placements);
   }
 
   // --- SETTINGS ---
