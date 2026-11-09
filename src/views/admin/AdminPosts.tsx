@@ -72,11 +72,15 @@ export const AdminPosts: React.FC<AdminPostsProps> = ({ onSelectSection, onNavig
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const handleDelete = (id: string) => {
-    dataService.deletePost(id);
-    setPosts(dataService.getPosts());
-    setDeleteConfirmId(null);
-    showToast('Article deleted successfully', 'info');
+  const handleDelete = async (id: string) => {
+    try {
+      await dataService.deletePost(id);
+      setPosts(dataService.getPosts());
+      setDeleteConfirmId(null);
+      showToast('Article deleted successfully from database', 'info');
+    } catch (err: any) {
+      showToast(`Delete Error: ${err?.message || 'Failed to delete'}`, 'error');
+    }
   };
 
   return (

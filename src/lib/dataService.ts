@@ -805,7 +805,7 @@ class DataService {
             }
           };
 
-          if (Array.isArray(row.post_translations)) {
+          if (Array.isArray(row.post_translations) && row.post_translations.length > 0) {
             for (const t of row.post_translations) {
               const langKey = t.language === 'hi' ? 'hi' : 'en';
               transObj[langKey] = {
@@ -818,6 +818,17 @@ class DataService {
                 focus_keyword: t.focus_keyword || undefined
               };
             }
+          } else if ((row as any).title) {
+            // Direct flat table fallback
+            transObj.en = {
+              title: (row as any).title,
+              slug: (row as any).slug || `article-${row.id}`,
+              excerpt: (row as any).excerpt || '',
+              content: (row as any).content || '',
+              seo_title: (row as any).seo_title,
+              meta_description: (row as any).meta_description,
+              focus_keyword: (row as any).focus_keyword
+            };
           }
 
           return {
@@ -1015,7 +1026,7 @@ class DataService {
     return this.posts.find(p => p.id === id) || null;
   }
 
-  savePost(postData: Partial<Post>): Post {
+  async savePost(postData: Partial<Post>): Promise<Post> {
     if (!authService.isSessionValid()) {
       throw new Error('Access Denied: Only authorized administrator (rajsiba2005@gmail.com) can publish or edit posts.');
     }
@@ -1042,7 +1053,6 @@ class DataService {
           featured_image: postData.featured_image ? normalizedFeaturedImage : this.posts[index].featured_image,
           updated_at: now
         } as Post;
-        this.posts[index] = post;
       } else {
         post = {
           ...postData,
@@ -1051,7 +1061,6 @@ class DataService {
           created_at: now,
           updated_at: now
         } as Post;
-        this.posts.unshift(post);
       }
     } else {
       post = {
@@ -1087,105 +1096,200 @@ class DataService {
           }
         }
       };
-      this.posts.unshift(post);
     }
 
-    // 1. Immediate optimistic local storage persistence
-    saveStored(STORAGE_KEYS.POSTS, this.posts);
-
-    // 2. Broadcast event to instantly update HomeView, CategoryView, SearchView, and AdminPosts
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: post }));
-    }
-
-    // 3. Asynchronous upsert to Supabase PostgreSQL cloud database
     const client = getSupabaseClient();
-    if (isSupabaseConfigured() && client) {
-      (async () => {
-        try {
-          const postRow: any = {
-            id: post.id,
-            featured_image: post.featured_image,
-            image_alt: post.image_alt || '',
-            status: post.status,
-            reading_time_minutes: post.reading_time_minutes || 5,
-            views_count: post.views_count || 0,
-            is_featured: post.is_featured,
-            is_trending: post.is_trending,
-            published_at: post.published_at || new Date().toISOString(),
+    const hasCloudSupabase = isSupabaseConfigured() && client;
+
+    // Database persistence & verification step
+    if (hasCloudSupabase && client) {
+      // 1. Resolve category_id safely against Supabase categories
+      let verifiedCategoryId: string | null = null;
+      try {
+        if (isValidUUID(post.category_id)) {
+          const { data: catRow } = await client.from('categories').select('id').eq('id', post.category_id).maybeSingle();
+          if (catRow?.id) verifiedCategoryId = catRow.id;
+        }
+        if (!verifiedCategoryId) {
+          const { data: firstCat } = await client.from('categories').select('id').limit(1).maybeSingle();
+          if (firstCat?.id) verifiedCategoryId = firstCat.id;
+        }
+      } catch (catErr) {
+        console.warn('Category verification notice:', catErr);
+      }
+
+      // 2. Resolve author_id safely against Supabase profiles
+      let verifiedAuthorId: string | null = null;
+      try {
+        const { data: authUser } = await client.auth.getUser();
+        if (authUser?.user?.id) {
+          const { data: profRow } = await client.from('profiles').select('id').eq('id', authUser.user.id).maybeSingle();
+          if (profRow?.id) verifiedAuthorId = profRow.id;
+        }
+      } catch (authErr) {
+        console.warn('Author profile verification notice:', authErr);
+      }
+
+      // 3. Prepare payload for public.posts table
+      const postRow: any = {
+        id: targetId,
+        featured_image: post.featured_image,
+        image_alt: post.image_alt || '',
+        status: post.status,
+        reading_time_minutes: post.reading_time_minutes || 5,
+        views_count: post.views_count || 0,
+        is_featured: post.is_featured,
+        is_trending: post.is_trending,
+        published_at: post.published_at || now,
+        updated_at: now
+      };
+
+      if (verifiedCategoryId) {
+        postRow.category_id = verifiedCategoryId;
+      }
+      if (verifiedAuthorId) {
+        postRow.author_id = verifiedAuthorId;
+      }
+
+      // Execute upsert into public.posts
+      let { error: postError } = await client
+        .from('posts')
+        .upsert(postRow, { onConflict: 'id' });
+
+      // If category_id or foreign key failed, retry with category_id omitted
+      if (postError && (postError.message.includes('category_id') || postError.message.includes('foreign key'))) {
+        delete postRow.category_id;
+        delete postRow.author_id;
+        const retryResult = await client.from('posts').upsert(postRow, { onConflict: 'id' });
+        postError = retryResult.error;
+      }
+
+      if (postError) {
+        console.error('Supabase posts upsert error:', postError);
+        throw new Error(`Database error saving to public.posts: ${postError.message} (Code: ${postError.code}). Verify Supabase SQL Editor migration and RLS policies.`);
+      }
+
+      // 4. Save bilingual translations to public.post_translations
+      for (const lang of ['en', 'hi'] as const) {
+        const tr = post.translations[lang];
+        if (tr && (tr.title || tr.slug)) {
+          const transPayload: any = {
+            post_id: targetId,
+            language: lang,
+            title: tr.title,
+            slug: tr.slug,
+            excerpt: tr.excerpt || '',
+            content: tr.content || '',
+            seo_title: tr.seo_title || null,
+            meta_description: tr.meta_description || null,
+            focus_keyword: tr.focus_keyword || null,
             updated_at: now
           };
 
-          // Only attach category_id/author_id if they are valid UUIDs
-          if (isValidUUID(post.category_id)) {
-            postRow.category_id = post.category_id;
-          }
-          if (isValidUUID(post.author_id)) {
-            postRow.author_id = post.author_id;
-          }
+          // Check if translation already exists for this post and language
+          const { data: existingTr } = await client
+            .from('post_translations')
+            .select('id')
+            .eq('post_id', targetId)
+            .eq('language', lang)
+            .maybeSingle();
 
-          const { error: postError } = await client
-            .from('posts')
-            .upsert(postRow, { onConflict: 'id' });
+          if (existingTr?.id) {
+            const { error: updErr } = await client
+              .from('post_translations')
+              .update(transPayload)
+              .eq('id', existingTr.id);
 
-          if (postError) {
-            console.warn('Supabase post upsert notice:', postError.message);
-          }
+            if (updErr) {
+              console.error(`Supabase post_translations (${lang}) update error:`, updErr);
+              throw new Error(`Database error updating ${lang.toUpperCase()} translation: ${updErr.message}`);
+            }
+          } else {
+            const { error: insErr } = await client
+              .from('post_translations')
+              .insert({
+                id: generateUUID(),
+                ...transPayload,
+                created_at: now
+              });
 
-          // Upsert translation records in post_translations
-          for (const lang of ['en', 'hi'] as const) {
-            const tr = post.translations[lang];
-            if (tr && (tr.title || tr.slug)) {
-              const { error: trError } = await client
-                .from('post_translations')
-                .upsert({
-                  post_id: post.id,
-                  language: lang,
-                  title: tr.title,
-                  slug: tr.slug,
-                  excerpt: tr.excerpt || '',
-                  content: tr.content || '',
-                  seo_title: tr.seo_title || null,
-                  meta_description: tr.meta_description || null,
-                  focus_keyword: tr.focus_keyword || null,
-                  updated_at: now
-                }, { onConflict: 'post_id,language' });
-
-              if (trError) {
-                console.warn(`Supabase post_translations (${lang}) upsert notice:`, trError.message);
-              }
+            if (insErr) {
+              console.error(`Supabase post_translations (${lang}) insert error:`, insErr);
+              throw new Error(`Database error inserting ${lang.toUpperCase()} translation: ${insErr.message}`);
             }
           }
-        } catch (syncErr: any) {
-          console.warn('Supabase async save exception:', syncErr?.message || syncErr);
         }
-      })();
+      }
+
+      // 5. Mandatory database verification: Query back the post to verify it is physically stored
+      const { data: verifiedRow, error: verifyErr } = await client
+        .from('posts')
+        .select(`
+          id,
+          featured_image,
+          image_alt,
+          category_id,
+          status,
+          reading_time_minutes,
+          views_count,
+          is_featured,
+          is_trending,
+          published_at,
+          created_at,
+          updated_at,
+          post_translations (*)
+        `)
+        .eq('id', targetId)
+        .maybeSingle();
+
+      if (verifyErr || !verifiedRow) {
+        console.error('Supabase post verification failed:', verifyErr);
+        throw new Error(`Database verification failed: Post was written, but reading it back returned error: ${verifyErr?.message || 'Row not found. Ensure RLS SELECT policy is enabled.'}`);
+      }
+    }
+
+    // Update in-memory state
+    if (postData.id) {
+      const idx = this.posts.findIndex(p => p.id === postData.id);
+      if (idx !== -1) {
+        this.posts[idx] = post;
+      } else {
+        this.posts.unshift(post);
+      }
+    } else {
+      this.posts.unshift(post);
+    }
+
+    // Save to stored cache
+    saveStored(STORAGE_KEYS.POSTS, this.posts);
+
+    // Broadcast change to all view listeners
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: post }));
     }
 
     return post;
   }
 
-  deletePost(id: string): boolean {
+  async deletePost(id: string): Promise<boolean> {
     if (!authService.isSessionValid()) {
       throw new Error('Access Denied: Only authorized administrator (rajsiba2005@gmail.com) can delete posts.');
     }
+
+    const client = getSupabaseClient();
+    if (isSupabaseConfigured() && client && isValidUUID(id)) {
+      const { error: delError } = await client.from('posts').delete().eq('id', id);
+      if (delError) {
+        console.error('Supabase delete error:', delError);
+        throw new Error(`Database error deleting article: ${delError.message}`);
+      }
+    }
+
     this.posts = this.posts.filter(p => p.id !== id);
     saveStored(STORAGE_KEYS.POSTS, this.posts);
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: { id, deleted: true } }));
-    }
-
-    // Async delete in Supabase
-    const client = getSupabaseClient();
-    if (isSupabaseConfigured() && client && isValidUUID(id)) {
-      (async () => {
-        try {
-          await client.from('posts').delete().eq('id', id);
-        } catch (e: any) {
-          console.warn('Supabase delete notice:', e?.message || e);
-        }
-      })();
     }
 
     return true;

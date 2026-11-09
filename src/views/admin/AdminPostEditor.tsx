@@ -125,7 +125,9 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
     setter(current + snippet);
   };
 
-  const handleSave = (newStatus?: Post['status']) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (newStatus?: Post['status']) => {
     const postStatus = newStatus || status;
 
     if (!titleEn && !titleHi) {
@@ -133,39 +135,47 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
       return;
     }
 
-    const saved = dataService.savePost({
-      id: postId,
-      category_id: categoryId,
-      featured_image: normalizeImageUrl(featuredImage || DEFAULT_ARTICLE_IMAGE),
-      image_alt: imageAlt,
-      status: postStatus,
-      reading_time_minutes: Number(readingTime) || 5,
-      is_featured: isFeatured,
-      is_trending: isTrending,
-      translations: {
-        en: {
-          title: titleEn || titleHi || 'Untitled',
-          slug: slugEn || `article-${Date.now()}`,
-          excerpt: excerptEn || excerptHi || '',
-          content: contentEn || contentHi || '<p>Content</p>',
-          seo_title: seoTitleEn,
-          meta_description: metaDescEn,
-          focus_keyword: focusKeywordEn
-        },
-        hi: {
-          title: titleHi || titleEn || 'शीर्षक रहित',
-          slug: slugHi || `article-hi-${Date.now()}`,
-          excerpt: excerptHi || excerptEn || '',
-          content: contentHi || contentEn || '<p>सामग्री</p>',
-          seo_title: seoTitleHi,
-          meta_description: metaDescHi,
-          focus_keyword: focusKeywordHi
+    setIsSaving(true);
+    try {
+      const saved = await dataService.savePost({
+        id: postId,
+        category_id: categoryId,
+        featured_image: normalizeImageUrl(featuredImage || DEFAULT_ARTICLE_IMAGE),
+        image_alt: imageAlt,
+        status: postStatus,
+        reading_time_minutes: Number(readingTime) || 5,
+        is_featured: isFeatured,
+        is_trending: isTrending,
+        translations: {
+          en: {
+            title: titleEn || titleHi || 'Untitled',
+            slug: slugEn || `article-${Date.now()}`,
+            excerpt: excerptEn || excerptHi || '',
+            content: contentEn || contentHi || '<p>Content</p>',
+            seo_title: seoTitleEn,
+            meta_description: metaDescEn,
+            focus_keyword: focusKeywordEn
+          },
+          hi: {
+            title: titleHi || titleEn || 'शीर्षक रहित',
+            slug: slugHi || `article-hi-${Date.now()}`,
+            excerpt: excerptHi || excerptEn || '',
+            content: contentHi || contentEn || '<p>सामग्री</p>',
+            seo_title: seoTitleHi,
+            meta_description: metaDescHi,
+            focus_keyword: focusKeywordHi
+          }
         }
-      }
-    });
+      });
 
-    showToast(`Article saved as ${postStatus}!`, 'success');
-    onSelectSection('posts');
+      showToast(`Article saved as ${postStatus} and verified in Supabase database!`, 'success');
+      onSelectSection('posts');
+    } catch (err: any) {
+      console.error('Save failed:', err);
+      showToast(`Publishing Error: ${err?.message || 'Database transaction failed'}`, 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -176,6 +186,7 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
         <div className="flex items-center gap-3">
           <button
             onClick={() => onSelectSection('posts')}
+            disabled={isSaving}
             className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -193,6 +204,7 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setPreviewModalOpen(true)}
+            disabled={isSaving}
             className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700"
           >
             <Eye className="w-3.5 h-3.5" />
@@ -200,17 +212,19 @@ export const AdminPostEditor: React.FC<AdminPostEditorProps> = ({ postId, onSele
           </button>
           <button
             onClick={() => handleSave('draft')}
+            disabled={isSaving}
             className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg flex items-center gap-1.5 transition-colors border border-slate-300 dark:border-slate-700"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>Save Draft</span>
+            <Save className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
+            <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
           </button>
           <button
             onClick={() => handleSave('published')}
+            disabled={isSaving}
             className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Publish Article</span>
+            <Sparkles className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
+            <span>{isSaving ? 'Saving to Database...' : 'Publish Article'}</span>
           </button>
         </div>
       </div>
