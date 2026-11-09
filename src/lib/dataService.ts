@@ -640,6 +640,22 @@ function saveStored<T>(key: string, val: T): void {
   }
 }
 
+export function isValidUUID(str?: string | null): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+
+export function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 // Data Service Singleton
 class DataService {
   private posts: Post[];
@@ -651,6 +667,7 @@ class DataService {
   private settings: SiteSettings;
   private navigation: NavigationItem[];
   private adminUser: UserProfile;
+  private isSyncingPosts: boolean = false;
 
   constructor() {
     this.posts = loadStored(STORAGE_KEYS.POSTS, INITIAL_POSTS);
@@ -711,6 +728,141 @@ class DataService {
     }
     this.navigation = loadStored(STORAGE_KEYS.NAVIGATION, INITIAL_NAVIGATION);
     this.adminUser = loadStored(STORAGE_KEYS.USER, DEFAULT_ADMIN);
+
+    // Auto-fetch fresh articles from Supabase in the background
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        this.syncPostsFromSupabase().catch(() => {});
+      }, 50);
+    }
+  }
+
+  /**
+   * Two-way synchronization with Supabase PostgreSQL tables:
+   * Queries public.posts and public.post_translations, merges with in-memory state,
+   * updates localStorage, and notifies UI listeners.
+   */
+  async syncPostsFromSupabase(): Promise<Post[]> {
+    if (this.isSyncingPosts) return this.posts;
+    const client = getSupabaseClient();
+    if (!isSupabaseConfigured() || !client) return this.posts;
+
+    this.isSyncingPosts = true;
+    try {
+      const { data: dbRows, error } = await client
+        .from('posts')
+        .select(`
+          id,
+          featured_image,
+          image_alt,
+          category_id,
+          author_id,
+          status,
+          reading_time_minutes,
+          views_count,
+          is_featured,
+          is_trending,
+          published_at,
+          created_at,
+          updated_at,
+          post_translations (
+            id,
+            language,
+            title,
+            slug,
+            excerpt,
+            content,
+            seo_title,
+            meta_description,
+            focus_keyword,
+            og_image
+          )
+        `)
+        .order('published_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase posts fetch notice:', error.message);
+        this.isSyncingPosts = false;
+        return this.posts;
+      }
+
+      if (Array.isArray(dbRows) && dbRows.length > 0) {
+        const fetchedPosts: Post[] = dbRows.map(row => {
+          const transObj: any = {
+            en: {
+              title: 'Untitled Article',
+              slug: `article-${row.id}`,
+              excerpt: '',
+              content: '<p></p>',
+              focus_keyword: ''
+            },
+            hi: {
+              title: 'शीर्षक रहित लेख',
+              slug: `article-hi-${row.id}`,
+              excerpt: '',
+              content: '<p></p>',
+              focus_keyword: ''
+            }
+          };
+
+          if (Array.isArray(row.post_translations)) {
+            for (const t of row.post_translations) {
+              const langKey = t.language === 'hi' ? 'hi' : 'en';
+              transObj[langKey] = {
+                title: t.title || '',
+                slug: t.slug || '',
+                excerpt: t.excerpt || '',
+                content: t.content || '',
+                seo_title: t.seo_title || undefined,
+                meta_description: t.meta_description || undefined,
+                focus_keyword: t.focus_keyword || undefined
+              };
+            }
+          }
+
+          return {
+            id: String(row.id),
+            featured_image: normalizeImageUrl(row.featured_image, DEFAULT_ARTICLE_IMAGE),
+            image_alt: row.image_alt || '',
+            category_id: row.category_id || this.categories[0]?.id || 'cat-1',
+            author_id: row.author_id || this.adminUser.id,
+            status: (row.status as any) || 'published',
+            reading_time_minutes: Number(row.reading_time_minutes) || 5,
+            views_count: Number(row.views_count) || 0,
+            is_featured: Boolean(row.is_featured),
+            is_trending: Boolean(row.is_trending),
+            published_at: row.published_at || row.created_at,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            author: this.adminUser,
+            tags: [],
+            translations: transObj
+          };
+        });
+
+        // Merge: keep local seed articles if they haven't been seeded into Supabase yet
+        const dbIdSet = new Set(fetchedPosts.map(p => p.id));
+        const dbSlugSet = new Set(fetchedPosts.flatMap(p => [p.translations.en.slug, p.translations.hi.slug]));
+        
+        const preservedSeeds = this.posts.filter(p => 
+          !dbIdSet.has(p.id) && 
+          !dbSlugSet.has(p.translations.en.slug) && 
+          !dbSlugSet.has(p.translations.hi.slug)
+        );
+
+        this.posts = [...fetchedPosts, ...preservedSeeds];
+        saveStored(STORAGE_KEYS.POSTS, this.posts);
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: this.posts }));
+        }
+      }
+    } catch (e: any) {
+      console.warn('Supabase post sync exception:', e?.message || e);
+    } finally {
+      this.isSyncingPosts = false;
+    }
+    return this.posts;
   }
 
   // --- POSTS ---
@@ -755,6 +907,110 @@ class DataService {
     };
   }
 
+  async fetchPostBySlug(slug: string, lang: Language): Promise<{ post: Post; translation: typeof INITIAL_POSTS[0]['translations']['en'] } | null> {
+    const cached = this.getPostBySlug(slug, lang);
+    if (cached) return cached;
+
+    const client = getSupabaseClient();
+    if (!isSupabaseConfigured() || !client) return null;
+
+    try {
+      const { data: translationRow, error } = await client
+        .from('post_translations')
+        .select(`
+          id,
+          language,
+          title,
+          slug,
+          excerpt,
+          content,
+          seo_title,
+          meta_description,
+          focus_keyword,
+          post:posts (
+            id,
+            featured_image,
+            image_alt,
+            category_id,
+            author_id,
+            status,
+            reading_time_minutes,
+            views_count,
+            is_featured,
+            is_trending,
+            published_at,
+            created_at,
+            updated_at,
+            post_translations (*)
+          )
+        `)
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (error || !translationRow || !translationRow.post) return null;
+
+      const pRow: any = translationRow.post;
+      const transObj: any = {
+        en: { title: 'Untitled', slug, excerpt: '', content: '' },
+        hi: { title: 'शीर्षक रहित', slug, excerpt: '', content: '' }
+      };
+
+      if (Array.isArray(pRow.post_translations)) {
+        for (const t of pRow.post_translations) {
+          const lKey = t.language === 'hi' ? 'hi' : 'en';
+          transObj[lKey] = {
+            title: t.title || '',
+            slug: t.slug || '',
+            excerpt: t.excerpt || '',
+            content: t.content || '',
+            seo_title: t.seo_title,
+            meta_description: t.meta_description,
+            focus_keyword: t.focus_keyword
+          };
+        }
+      }
+
+      const fetchedPost: Post = {
+        id: String(pRow.id),
+        featured_image: normalizeImageUrl(pRow.featured_image, DEFAULT_ARTICLE_IMAGE),
+        image_alt: pRow.image_alt || '',
+        category_id: pRow.category_id || this.categories[0]?.id || 'cat-1',
+        author_id: pRow.author_id || this.adminUser.id,
+        status: pRow.status || 'published',
+        reading_time_minutes: Number(pRow.reading_time_minutes) || 5,
+        views_count: Number(pRow.views_count) || 0,
+        is_featured: Boolean(pRow.is_featured),
+        is_trending: Boolean(pRow.is_trending),
+        published_at: pRow.published_at || pRow.created_at,
+        created_at: pRow.created_at,
+        updated_at: pRow.updated_at,
+        author: this.adminUser,
+        tags: [],
+        translations: transObj
+      };
+
+      const existingIdx = this.posts.findIndex(p => p.id === fetchedPost.id);
+      if (existingIdx !== -1) {
+        this.posts[existingIdx] = fetchedPost;
+      } else {
+        this.posts.unshift(fetchedPost);
+      }
+      saveStored(STORAGE_KEYS.POSTS, this.posts);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: this.posts }));
+      }
+
+      return {
+        post: fetchedPost,
+        translation: fetchedPost.translations[lang] || fetchedPost.translations.en
+      };
+    } catch (err) {
+      console.warn('fetchPostBySlug error:', err);
+      return null;
+    }
+  }
+
   getPostById(id: string): Post | null {
     return this.posts.find(p => p.id === id) || null;
   }
@@ -771,12 +1027,18 @@ class DataService {
       DEFAULT_ARTICLE_IMAGE
     );
 
+    // Ensure valid RFC4122 UUID for database persistence
+    const targetId = postData.id && isValidUUID(postData.id) 
+      ? postData.id 
+      : (postData.id && !postData.id.startsWith('post-') ? postData.id : generateUUID());
+
     if (postData.id) {
       const index = this.posts.findIndex(p => p.id === postData.id);
       if (index !== -1) {
         post = {
           ...this.posts[index],
           ...postData,
+          id: targetId,
           featured_image: postData.featured_image ? normalizedFeaturedImage : this.posts[index].featured_image,
           updated_at: now
         } as Post;
@@ -784,8 +1046,8 @@ class DataService {
       } else {
         post = {
           ...postData,
+          id: targetId,
           featured_image: normalizedFeaturedImage,
-          id: postData.id,
           created_at: now,
           updated_at: now
         } as Post;
@@ -793,17 +1055,17 @@ class DataService {
       }
     } else {
       post = {
-        id: `post-${Date.now()}`,
+        id: targetId,
         featured_image: normalizedFeaturedImage,
         image_alt: postData.image_alt || '',
         category_id: postData.category_id || this.categories[0].id,
         author_id: this.adminUser.id,
-        status: postData.status || 'draft',
+        status: postData.status || 'published',
         reading_time_minutes: postData.reading_time_minutes || 5,
         views_count: 0,
         is_featured: Boolean(postData.is_featured),
         is_trending: Boolean(postData.is_trending),
-        published_at: postData.status === 'published' ? now : (postData.published_at || now),
+        published_at: postData.published_at || now,
         created_at: now,
         updated_at: now,
         author: this.adminUser,
@@ -813,14 +1075,14 @@ class DataService {
             title: 'Untitled Article',
             slug: `untitled-article-${Date.now()}`,
             excerpt: '',
-            content: '',
+            content: '<p></p>',
             focus_keyword: ''
           },
           hi: {
             title: 'शीर्षक रहित लेख',
             slug: `untitled-article-hi-${Date.now()}`,
             excerpt: '',
-            content: '',
+            content: '<p></p>',
             focus_keyword: ''
           }
         }
@@ -828,7 +1090,78 @@ class DataService {
       this.posts.unshift(post);
     }
 
+    // 1. Immediate optimistic local storage persistence
     saveStored(STORAGE_KEYS.POSTS, this.posts);
+
+    // 2. Broadcast event to instantly update HomeView, CategoryView, SearchView, and AdminPosts
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: post }));
+    }
+
+    // 3. Asynchronous upsert to Supabase PostgreSQL cloud database
+    const client = getSupabaseClient();
+    if (isSupabaseConfigured() && client) {
+      (async () => {
+        try {
+          const postRow: any = {
+            id: post.id,
+            featured_image: post.featured_image,
+            image_alt: post.image_alt || '',
+            status: post.status,
+            reading_time_minutes: post.reading_time_minutes || 5,
+            views_count: post.views_count || 0,
+            is_featured: post.is_featured,
+            is_trending: post.is_trending,
+            published_at: post.published_at || new Date().toISOString(),
+            updated_at: now
+          };
+
+          // Only attach category_id/author_id if they are valid UUIDs
+          if (isValidUUID(post.category_id)) {
+            postRow.category_id = post.category_id;
+          }
+          if (isValidUUID(post.author_id)) {
+            postRow.author_id = post.author_id;
+          }
+
+          const { error: postError } = await client
+            .from('posts')
+            .upsert(postRow, { onConflict: 'id' });
+
+          if (postError) {
+            console.warn('Supabase post upsert notice:', postError.message);
+          }
+
+          // Upsert translation records in post_translations
+          for (const lang of ['en', 'hi'] as const) {
+            const tr = post.translations[lang];
+            if (tr && (tr.title || tr.slug)) {
+              const { error: trError } = await client
+                .from('post_translations')
+                .upsert({
+                  post_id: post.id,
+                  language: lang,
+                  title: tr.title,
+                  slug: tr.slug,
+                  excerpt: tr.excerpt || '',
+                  content: tr.content || '',
+                  seo_title: tr.seo_title || null,
+                  meta_description: tr.meta_description || null,
+                  focus_keyword: tr.focus_keyword || null,
+                  updated_at: now
+                }, { onConflict: 'post_id,language' });
+
+              if (trError) {
+                console.warn(`Supabase post_translations (${lang}) upsert notice:`, trError.message);
+              }
+            }
+          }
+        } catch (syncErr: any) {
+          console.warn('Supabase async save exception:', syncErr?.message || syncErr);
+        }
+      })();
+    }
+
     return post;
   }
 
@@ -838,6 +1171,23 @@ class DataService {
     }
     this.posts = this.posts.filter(p => p.id !== id);
     saveStored(STORAGE_KEYS.POSTS, this.posts);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('digiseekho_posts_changed', { detail: { id, deleted: true } }));
+    }
+
+    // Async delete in Supabase
+    const client = getSupabaseClient();
+    if (isSupabaseConfigured() && client && isValidUUID(id)) {
+      (async () => {
+        try {
+          await client.from('posts').delete().eq('id', id);
+        } catch (e: any) {
+          console.warn('Supabase delete notice:', e?.message || e);
+        }
+      })();
+    }
+
     return true;
   }
 

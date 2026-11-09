@@ -44,8 +44,41 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
   const [commentText, setCommentText] = useState('');
   const [commentSuccess, setCommentSuccess] = useState(false);
 
-  // Retrieve post
-  const postData = dataService.getPostBySlug(slug, language);
+  // Retrieve post (with fallback to cloud Supabase fetch if landing on new article directly)
+  const [postData, setPostData] = useState(() => dataService.getPostBySlug(slug, language));
+  const [isLoadingPost, setIsLoadingPost] = useState(!postData);
+
+  useEffect(() => {
+    let isMounted = true;
+    const current = dataService.getPostBySlug(slug, language);
+    if (current) {
+      setPostData(current);
+      setIsLoadingPost(false);
+    } else {
+      setIsLoadingPost(true);
+      dataService.fetchPostBySlug(slug, language).then(res => {
+        if (isMounted) {
+          setPostData(res);
+          setIsLoadingPost(false);
+        }
+      }).catch(() => {
+        if (isMounted) setIsLoadingPost(false);
+      });
+    }
+
+    const handleUpdate = () => {
+      const updated = dataService.getPostBySlug(slug, language);
+      if (updated && isMounted) {
+        setPostData(updated);
+      }
+    };
+
+    window.addEventListener('digiseekho_posts_changed', handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('digiseekho_posts_changed', handleUpdate);
+    };
+  }, [slug, language]);
 
   useEffect(() => {
     if (!postData) return;
@@ -90,6 +123,17 @@ export const ArticleView: React.FC<ArticleViewProps> = ({ slug, language, onNavi
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  if (isLoadingPost) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-24 text-center space-y-4">
+        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          {isHindi ? 'लेख लोड हो रहा है...' : 'Loading published article...'}
+        </p>
+      </div>
+    );
+  }
 
   if (!postData) {
     return (

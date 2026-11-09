@@ -24,9 +24,41 @@ export const AdminPosts: React.FC<AdminPostsProps> = ({ onSelectSection, onNavig
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const posts = dataService.getPosts();
+  const [posts, setPosts] = useState(() => dataService.getPosts());
   const categories = dataService.getCategories();
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      setPosts(dataService.getPosts());
+    };
+    window.addEventListener('digiseekho_posts_changed', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    // Initial background sync
+    dataService.syncPostsFromSupabase().then(() => {
+      setPosts(dataService.getPosts());
+    }).catch(() => {});
+
+    return () => {
+      window.removeEventListener('digiseekho_posts_changed', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    try {
+      await dataService.syncPostsFromSupabase();
+      setPosts(dataService.getPosts());
+      showToast('Synced articles from Supabase database successfully!', 'success');
+    } catch {
+      showToast('Could not sync from cloud database. Using local cache.', 'info');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const filteredPosts = posts.filter(p => {
     const matchesSearch = !searchTerm || (
@@ -42,6 +74,7 @@ export const AdminPosts: React.FC<AdminPostsProps> = ({ onSelectSection, onNavig
 
   const handleDelete = (id: string) => {
     dataService.deletePost(id);
+    setPosts(dataService.getPosts());
     setDeleteConfirmId(null);
     showToast('Article deleted successfully', 'info');
   };
@@ -60,13 +93,24 @@ export const AdminPosts: React.FC<AdminPostsProps> = ({ onSelectSection, onNavig
           </p>
         </div>
 
-        <button
-          onClick={() => onSelectSection('new-post')}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 shadow-xs shrink-0"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>New Article</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            title="Sync articles with Supabase"
+            className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 shrink-0"
+          >
+            <span className={isSyncing ? 'animate-spin' : ''}>🔄</span>
+            <span>{isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+          </button>
+          <button
+            onClick={() => onSelectSection('new-post')}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-2 shadow-xs shrink-0"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>New Article</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}

@@ -19,22 +19,37 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribedSuccess, setSubscribedSuccess] = useState(false);
   const [banner, setBanner] = useState(() => dataService.getBanner());
+  const [posts, setPosts] = useState(() => dataService.getPosts({ status: 'published' }));
 
   useEffect(() => {
     const handleBannerUpdate = () => {
       setBanner(dataService.getBanner());
     };
+
+    const handlePostsUpdate = () => {
+      setPosts(dataService.getPosts({ status: 'published' }));
+    };
+
     window.addEventListener('digiseekho_settings_changed', handleBannerUpdate);
     window.addEventListener('digiseekho_banner_changed', handleBannerUpdate);
+    window.addEventListener('digiseekho_posts_changed', handlePostsUpdate);
     window.addEventListener('storage', handleBannerUpdate);
+    window.addEventListener('storage', handlePostsUpdate);
+
+    // Initial background sync with Supabase
+    dataService.syncPostsFromSupabase().then(() => {
+      setPosts(dataService.getPosts({ status: 'published' }));
+    }).catch(() => {});
+
     return () => {
       window.removeEventListener('digiseekho_settings_changed', handleBannerUpdate);
       window.removeEventListener('digiseekho_banner_changed', handleBannerUpdate);
+      window.removeEventListener('digiseekho_posts_changed', handlePostsUpdate);
       window.removeEventListener('storage', handleBannerUpdate);
+      window.removeEventListener('storage', handlePostsUpdate);
     };
   }, []);
 
-  const posts = dataService.getPosts({ status: 'published' });
   const categories = dataService.getCategories();
 
   const featuredPost = posts.find(p => p.is_featured) || posts[0];

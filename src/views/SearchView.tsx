@@ -18,7 +18,19 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = '', langu
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = dataService.getCategories();
-  const allPosts = dataService.getPosts({ status: 'published' });
+  const [allPosts, setAllPosts] = useState(() => dataService.getPosts({ status: 'published' }));
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAllPosts(dataService.getPosts({ status: 'published' }));
+    };
+    window.addEventListener('digiseekho_posts_changed', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('digiseekho_posts_changed', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     updatePageSEO({

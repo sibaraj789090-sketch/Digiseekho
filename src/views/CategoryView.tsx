@@ -18,7 +18,19 @@ export const CategoryView: React.FC<CategoryViewProps> = ({ slug, language, onNa
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
 
   const category = dataService.getCategoryBySlug(slug);
-  const posts = dataService.getPosts({ categorySlug: slug, status: 'published' });
+  const [posts, setPosts] = useState(() => dataService.getPosts({ categorySlug: slug, status: 'published' }));
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setPosts(dataService.getPosts({ categorySlug: slug, status: 'published' }));
+    };
+    window.addEventListener('digiseekho_posts_changed', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('digiseekho_posts_changed', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [slug]);
 
   useEffect(() => {
     if (!category) return;
